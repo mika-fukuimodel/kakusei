@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>覚醒モデル</title>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700;800&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --ink: #1a1410;
+  --gold: #b8860b;
+  --gold-light: #d4a017;
+  --paper: #f5f0e8;
+  --muted: #7a6f5e;
+  --line: #c8bfaa;
+  --red: #8b2020;
+  --white: #ffffff;
+  --success: #2c5f2e;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: 'Noto Sans JP', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ログイン画面 */
+#login-screen {
+  width: 100%;
+  max-width: 440px;
+  padding: 40px 20px;
+  animation: fadeIn 0.8s ease;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.login-header h1 {
+  font-family: 'Shippori Mincho', serif;
+  font-size: 48px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+
+.login-header p {
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  color: var(--muted);
+}
+
+.login-divider {
+  width: 40px;
+  height: 1px;
+  background: var(--gold);
+  margin: 16px auto;
+  opacity: 0.4;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-input {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(200,191,170,0.2);
+  border-radius: 4px;
+  padding: 16px 20px;
+  color: var(--paper);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  width: 100%;
+  transition: border-color 0.2s;
+}
+
+.login-input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.login-input::placeholder { color: var(--muted); }
+
+.login-btn {
+  background: var(--gold);
+  color: var(--ink);
+  border: none;
+  border-radius: 4px;
+  padding: 16px;
+  font-family: 'Shippori Mincho', serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+
+.login-btn:hover { background: var(--gold-light); }
+
+.login-error {
+  text-align: center;
+  font-size: 12px;
+  color: var(--red);
+  letter-spacing: 0.05em;
+  min-height: 18px;
+}
+
+/* メイン画面 */
+#main-screen {
+  display: none;
+  width: 100%;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+/* ヘッダー */
+.app-header {
+  background: rgba(0,0,0,0.4);
+  border-bottom: 1px solid rgba(200,191,170,0.1);
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}
+
+.app-header h1 {
+  font-family: 'Shippori Mincho', serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--gold);
+}
+
+.role-badge {
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  padding: 4px 12px;
+  border: 1px solid rgba(184,134,11,0.4);
+  border-radius: 2px;
+  color: var(--gold);
+}
+
+.logout-btn {
+  background: none;
+  border: 1px solid rgba(200,191,170,0.2);
+  color: var(--muted);
+  padding: 6px 14px;
+  border-radius: 2px;
+  font-size: 11px;
+  cursor: pointer;
+  letter-spacing: 0.1em;
+  transition: all 0.2s;
+}
+.logout-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+/* コンテンツ */
+.app-content {
+  flex: 1;
+  padding: 40px 32px;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ========== 参加者画面 ========== */
+#participant-view { display: none; }
+
+.stage-indicator {
+  text-align: center;
+  margin-bottom: 40px;
+  animation: slideUp 0.6s ease;
+}
+
+.stage-indicator .stage-num {
+  font-family: 'Shippori Mincho', serif;
+  font-size: 64px;
+  font-weight: 800;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.stage-indicator .stage-name {
+  font-size: 14px;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+.q-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(200,191,170,0.15);
+  border-radius: 6px;
+  padding: 28px;
+  margin-bottom: 20px;
+  animation: slideUp 0.6s ease both;
+}
+
+.q-card:nth-child(2) { animation-delay: 0.1s; }
+.q-card:nth-child(3) { animation-delay: 0.2s; }
+.q-card:nth-child(4) { animation-delay: 0.3s; }
+
+.q-label {
+  font-size: 9px;
+  letter-spacing: 0.5em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.q-text {
+  font-family: 'Shippori Mincho', serif;
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  line-height: 1.7;
+  color: var(--paper);
+  margin-bottom: 16px;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.option-btn {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(200,191,170,0.2);
+  border-radius: 3px;
+  padding: 12px 16px;
+  color: rgba(245,240,232,0.7);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+}
+
+.option-btn:hover, .option-btn.selected {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(184,134,11,0.08);
+}
+
+.free-input {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(200,191,170,0.2);
+  border-radius: 3px;
+  padding: 14px 16px;
+  color: var(--paper);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  width: 100%;
+  resize: none;
+  min-height: 80px;
+  transition: border-color 0.2s;
+}
+
+.free-input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.free-input::placeholder { color: var(--muted); font-size: 12px; }
+
+.submit-btn {
+  width: 100%;
+  background: var(--gold);
+  color: var(--ink);
+  border: none;
+  border-radius: 4px;
+  padding: 18px;
+  font-family: 'Shippori Mincho', serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+
+.submit-btn:hover { background: var(--gold-light); }
+.submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.hidden { display: none !important; }
+
+/* ========== 支援者画面 ========== */
+#supporter-view { display: none; }
+
+.supporter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-size: 10px;
+  letter-spacing: 0.4em;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+
+.form-select {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(200,191,170,0.2);
+  border-radius: 3px;
+  padding: 12px 16px;
+  color: var(--paper);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  appearance: none;
+}
+
+.form-select:focus { outline: none; border-color: var(--gold); }
+.form-select option { background: var(--ink); }
+
+.emotion-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.emotion-tag {
+  padding: 6px 14px;
+  border: 1px solid rgba(200,191,170,0.2);
+  border-radius: 2px;
+  font-size: 11px;
+  color: rgba(245,240,232,0.6);
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.05em;
+}
+
+.emotion-tag.selected {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(184,134,11,0.08);
+}
+
+.toggle-group {
+  display: flex;
+  gap: 8px;
+}
+
+.toggle-btn {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid rgba(200,191,170,0.2);
+  border-radius: 3px;
+  background: none;
+  color: rgba(245,240,232,0.6);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.05em;
+}
+
+.toggle-btn.selected {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(184,134,11,0.08);
+}
+
+.alert-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(139,32,32,0.1);
+  border: 1px solid rgba(139,32,32,0.3);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.alert-toggle input { cursor: pointer; accent-color: var(--red); }
+.alert-toggle label { font-size: 13px; color: rgba(245,240,232,0.7); cursor: pointer; letter-spacing: 0.05em; }
+
+/* ========== ディレクター画面 ========== */
+#director-view { display: none; }
+
+.director-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid rgba(200,191,170,0.1);
+}
+
+.dir-tab {
+  padding: 10px 20px;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.2s;
+}
+
+.dir-tab.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(200,191,170,0.15);
+  border-radius: 4px;
+  padding: 20px;
+  text-align: center;
+}
+
+.stat-num {
+  font-family: 'Shippori Mincho', serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.stat-label {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  color: var(--gold);
+  text-transform: uppercase;
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(200,191,170,0.15);
+}
+
+.data-table td {
+  font-size: 12px;
+  color: rgba(245,240,232,0.7);
+  padding: 12px;
+  border-bottom: 1px solid rgba(200,191,170,0.08);
+  letter-spacing: 0.03em;
+}
+
+.data-table tr:hover td {
+  background: rgba(255,255,255,0.02);
+}
+
+.stage-pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 2px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+.alert-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--red);
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+/* 成功メッセージ */
+.success-msg {
+  text-align: center;
+  padding: 48px 24px;
+  animation: fadeIn 0.5s ease;
+}
+
+.success-msg .check {
+  font-size: 48px;
+  color: var(--gold);
+  margin-bottom: 16px;
+}
+
+.success-msg h3 {
+  font-family: 'Shippori Mincho', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 8px;
+  letter-spacing: 0.1em;
+}
+
+.success-msg p {
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  line-height: 1.8;
+  margin-bottom: 24px;
+}
+
+.ai-feedback {
+  background: rgba(184,134,11,0.08);
+  border: 1px solid rgba(184,134,11,0.2);
+  border-radius: 4px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.ai-feedback .ai-label {
+  font-size: 9px;
+  letter-spacing: 0.4em;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+
+.ai-feedback p {
+  font-size: 14px;
+  color: var(--paper);
+  line-height: 1.9;
+  letter-spacing: 0.04em;
+  margin-bottom: 0;
+}
+
+.section-title {
+  font-family: 'Shippori Mincho', serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(200,191,170,0.1);
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 600px) {
+  .app-content { padding: 24px 16px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .app-header { padding: 12px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ログイン画面 -->
+<div id="login-screen">
+  <div class="login-header">
+    <h1>覚　醒</h1>
+    <div class="login-divider"></div>
+    <p>TRANSFORMATION OS</p>
+  </div>
+  <div class="login-form">
+    <input type="password" class="login-input" id="login-code" placeholder="コードを入力してください" />
+    <div class="login-error" id="login-error"></div>
+    <button class="login-btn" onclick="handleLogin()">入る</button>
+  </div>
+</div>
+
+<!-- メイン画面 -->
+<div id="main-screen">
+  <header class="app-header">
+    <h1>覚　醒</h1>
+    <span class="role-badge" id="role-label"></span>
+    <button class="logout-btn" onclick="handleLogout()">退出</button>
+  </header>
+
+  <div class="app-content">
+
+    <!-- 参加者画面 -->
+    <div id="participant-view">
+      <div id="participant-form-area"></div>
+    </div>
+
+    <!-- 支援者画面 -->
+    <div id="supporter-view">
+      <div class="section-title">観察を記録する</div>
+      <div class="supporter-form">
+
+        <div class="form-group">
+          <div class="form-label">参加者コード</div>
+          <input type="text" class="free-input" id="obs-participant-code" placeholder="例：P001" style="min-height:unset;height:44px;resize:none;" />
+        </div>
+
+        <div class="form-group">
+          <div class="form-label">支援者がかけた言葉</div>
+          <textarea class="free-input" id="obs-utterance" placeholder="その場でかけた言葉を記録してください"></textarea>
+        </div>
+
+        <div class="form-group">
+          <div class="form-label">参加者の反応</div>
+          <textarea class="free-input" id="obs-response" placeholder="参加者の言葉・反応を記録してください"></textarea>
+        </div>
+
+        <div class="form-group">
+          <div class="form-label">関わり前のステージ</div>
+          <select class="form-select" id="obs-stage-before">
+            <option value="">選択してください</option>
+            <option value="1">一：封鎖状態</option>
+            <option value="2">二：信頼の構築</option>
+            <option value="3">三：潜在意識の顕在化</option>
+            <option value="4">四：主体の回復</option>
+            <option value="5">五：小さな挑戦</option>
+            <option value="6">六：障害の突破</option>
+            <option value="7">七：場の創造と還元</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <div class="form-label">関わり後のステージ</div>
+          <select class="form-select" id="obs-stage-after">
+            <option value="">選択してください</option>
+            <option value="1">一：封鎖状態</option>
+            <option value="2">二：信頼の構築</option>
+            <option value="3">三：潜在意識の顕在化</option>
+            <option value="4">四：主体の回復</option>
+            <option value="5">五：小さな挑戦</option>
+            <option value="6">六：障害の突破</option>
+            <option value="7">七：場の創造と還元</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <div class="form-label">行動が起きたか</div>
+          <div class="toggle-group">
+            <button class="toggle-btn" id="action-yes" onclick="selectToggle('action','yes')">YES</button>
+            <button class="toggle-btn" id="action-no" onclick="selectToggle('action','no')">NO</button>
+          </div>
+        </div>
+
+        <div class="form-group" id="action-detail-group" style="display:none;">
+          <div class="form-label">どんな行動か</div>
+          <textarea class="free-input" id="obs-action-text" placeholder="具体的な行動を記録してください"></textarea>
+        </div>
+
+        <div class="form-group">
+          <div class="form-label">感情タグ（複数選択可）</div>
+          <div class="emotion-tags" id="emotion-tags">
+            <div class="emotion-tag" onclick="toggleEmotion(this)">自己否定</div>
+            <div class="emotion-tag" onclick="toggleEmotion(this)">恐怖・不安</div>
+            <div class="emotion-tag" onclick="toggleEmotion(this)">義務感</div>
+            <div class="emotion-tag" onclick="toggleEmotion(this)">他者比較</div>
+            <div class="emotion-tag" onclick="toggleEmotion(this)">解放</div>
+            <div class="emotion-tag" onclick="toggleEmotion(this)">決意</div>
+            <div class="emotion-tag" onclick="toggleEmotion(this)">感謝・承認</div>
+            <div class="emotion-tag" onclick="toggleEmotion(this)">行動報告</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="form-label">変容のきっかけと判定するか</div>
+          <div class="toggle-group">
+            <button class="toggle-btn" id="transform-yes" onclick="selectToggle('transform','yes')">YES</button>
+            <button class="toggle-btn" id="transform-no" onclick="selectToggle('transform','no')">NO</button>
+          </div>
+        </div>
+
+        <div class="alert-toggle">
+          <input type="checkbox" id="alert-needed" />
+          <label for="alert-needed">⚠️ この参加者にアラートが必要</label>
+        </div>
+
+        <div class="form-group" id="alert-reason-group" style="display:none;">
+          <div class="form-label">アラートの理由</div>
+          <textarea class="free-input" id="obs-alert-reason" placeholder="アラートの理由を記録してください"></textarea>
+        </div>
+
+        <div class="form-group">
+          <div class="form-label">備考・文脈</div>
+          <textarea class="free-input" id="obs-note" placeholder="補足情報があれば"></textarea>
+        </div>
+
+        <button class="submit-btn" onclick="submitObservation()">記録を保存する</button>
+        <div id="supporter-msg" style="text-align:center;font-size:12px;min-height:18px;"></div>
+      </div>
+    </div>
+
+    <!-- ディレクター画面 -->
+    <div id="director-view">
+      <div class="director-tabs">
+        <div class="dir-tab active" onclick="switchTab('overview')">概要</div>
+        <div class="dir-tab" onclick="switchTab('participants')">参加者</div>
+        <div class="dir-tab" onclick="switchTab('alerts')">アラート</div>
+        <div class="dir-tab" onclick="switchTab('triggers')">変容トリガー</div>
+      </div>
+
+      <div id="tab-overview">
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat-card"><div class="stat-num" id="stat-programs">-</div><div class="stat-label">プログラム数</div></div>
+          <div class="stat-card"><div class="stat-num" id="stat-participants">-</div><div class="stat-label">参加者数</div></div>
+          <div class="stat-card"><div class="stat-num" id="stat-events">-</div><div class="stat-label">記録数</div></div>
+        </div>
+        <div class="section-title">最近の記録</div>
+        <table class="data-table">
+          <thead><tr><th>参加者</th><th>ステージ</th><th>記録日時</th></tr></thead>
+          <tbody id="recent-events"></tbody>
+        </table>
+      </div>
+
+      <div id="tab-participants" style="display:none;">
+        <div class="section-title">参加者一覧</div>
+        <table class="data-table">
+          <thead><tr><th>コード</th><th>ニックネーム</th><th>プログラム</th><th>現在のステージ</th><th>状態</th></tr></thead>
+          <tbody id="participants-list"></tbody>
+        </table>
+      </div>
+
+      <div id="tab-alerts" style="display:none;">
+        <div class="section-title">⚠️ アラート一覧</div>
+        <table class="data-table">
+          <thead><tr><th>参加者</th><th>理由</th><th>記録日時</th><th>支援者</th></tr></thead>
+          <tbody id="alerts-list"></tbody>
+        </table>
+      </div>
+
+      <div id="tab-triggers" style="display:none;">
+        <div class="section-title">変容トリガー一覧</div>
+        <table class="data-table">
+          <thead><tr><th>参加者</th><th>支援者の言葉</th><th>参加者の反応</th><th>感情タグ</th></tr></thead>
+          <tbody id="triggers-list"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://dteuzcpgjoluehfzbobn.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_v8VIXxgZIhwF3C6DxWOFgw_slxtWIEc';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// パスワード設定
+const PASSWORDS = {
+  'kakusei-director': 'director',
+  'kakusei-supporter': 'supporter',
+};
+// 参加者はコードで照合（P001など）
+
+let currentRole = null;
+let currentParticipant = null;
+let actionSelected = null;
+let transformSelected = null;
+
+// ログイン
+async function handleLogin() {
+  const code = document.getElementById('login-code').value.trim();
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+
+  if (!code) { errEl.textContent = 'コードを入力してください'; return; }
+
+  if (code === 'director2026') {
+    currentRole = 'director';
+    showMain();
+    return;
+  }
+  if (code === 'supporter2026') {
+    currentRole = 'supporter';
+    showMain();
+    return;
+  }
+
+  // 参加者コードで照合
+  const { data, error } = await db.from('participants').select('*').eq('code', code.toUpperCase()).eq('is_active', true).single();
+  if (data) {
+    currentRole = 'participant';
+    currentParticipant = data;
+    showMain();
+    return;
+  }
+
+  errEl.textContent = 'コードが正しくありません';
+}
+
+document.getElementById('login-code').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleLogin();
+});
+
+function showMain() {
+  document.getElementById('login-screen').style.display = 'none';
+  const main = document.getElementById('main-screen');
+  main.style.display = 'flex';
+
+  const roleLabels = { director: 'DIRECTOR', supporter: 'SUPPORTER', participant: 'PARTICIPANT' };
+  document.getElementById('role-label').textContent = roleLabels[currentRole];
+
+  if (currentRole === 'director') {
+    document.getElementById('director-view').style.display = 'block';
+    loadDirectorData();
+  } else if (currentRole === 'supporter') {
+    document.getElementById('supporter-view').style.display = 'block';
+    document.getElementById('alert-needed').addEventListener('change', function() {
+      document.getElementById('alert-reason-group').style.display = this.checked ? 'block' : 'none';
+    });
+  } else {
+    document.getElementById('participant-view').style.display = 'block';
+    renderParticipantForm();
+  }
+}
+
+function handleLogout() {
+  currentRole = null;
+  currentParticipant = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('main-screen').style.display = 'none';
+  document.getElementById('login-code').value = '';
+  document.getElementById('director-view').style.display = 'none';
+  document.getElementById('supporter-view').style.display = 'none';
+  document.getElementById('participant-view').style.display = 'none';
+}
+
+// ========== 参加者フォーム ==========
+const stageNames = ['', '封鎖状態', '信頼の構築', '潜在意識の顕在化', '主体の回復', '小さな挑戦', '障害の突破', '場の創造と還元'];
+const stageKanji = ['', '一', '二', '三', '四', '五', '六', '七'];
+
+function renderParticipantForm() {
+  const stage = currentParticipant.current_stage;
+  const area = document.getElementById('participant-form-area');
+
+  area.innerHTML = `
+    <div class="stage-indicator">
+      <div class="stage-num">${stageKanji[stage]}</div>
+      <div class="stage-name">${stageNames[stage]}</div>
+    </div>
+    ${getQuestionsHTML(stage)}
+    <button class="submit-btn" onclick="submitEvent()">記録する</button>
+    <div id="participant-msg" style="text-align:center;font-size:12px;margin-top:12px;min-height:18px;color:var(--muted);"></div>
+  `;
+}
+
+function getQuestionsHTML(stage) {
+  if (stage <= 4) {
+    const q1Labels = ['', '今の自分に一番しっくりくるものを選んでください。', 'この場で、正直に話せましたか？', '今日、自分でも気づいていなかった気持ちや考えが出てきましたか？', '最近、自分で決めたと感じた場面はありましたか？'];
+    const q1Options = [
+      [],
+      ['① 動きたい', '② 動けない', '③ 動き方がわからない'],
+      ['① 全部話せた', '② 少し話せた', '③ まだ話せていないことがある'],
+      ['① はい', '② 少し', '③ いいえ'],
+      ['① はい', '② 少し', '③ いいえ'],
+    ];
+    const q2Labels = ['', '今、頭の中にあるけど、まだ誰にも言えていないことは何ですか？', '次も話したいと思いましたか？', 'それはどんなことでしたか？', 'それはどんな場面でしたか？'];
+    const q3Labels = ['', '', '', '今日、言えなかったことはありましたか？', '誰かに決めてもらいたいと感じた場面はありましたか？'];
+
+    return `
+      <div class="q-card">
+        <div class="q-label">Q1</div>
+        <div class="q-text">${q1Labels[stage]}</div>
+        <div class="options" id="q1-options">
+          ${q1Options[stage].map((o, i) => `<button class="option-btn" onclick="selectOption(this, 'q1', ${i+1})">${o}</button>`).join('')}
+        </div>
+      </div>
+      <div class="q-card">
+        <div class="q-label">Q2</div>
+        <div class="q-text">${q2Labels[stage]}</div>
+        <textarea class="free-input" id="main-text" placeholder="ひとことでいい"></textarea>
+      </div>
+      ${stage >= 3 ? `
+      <div class="q-card" id="branch-card" style="display:none;">
+        <div class="q-label">Q3</div>
+        <div class="q-text">${q3Labels[stage]}</div>
+        <textarea class="free-input" id="branch-text" placeholder="ひとことでいい"></textarea>
+      </div>` : ''}
+    `;
+  }
+
+  if (stage === 5) return `
+    <div class="q-card">
+      <div class="q-label">Q1 — 行動の発生</div>
+      <div class="q-text">最近、今までやったことがない新しい行動を起こしましたか？</div>
+      <div class="options">
+        <button class="option-btn" onclick="selectOption(this,'q1',1);showEl('action-detail')">① はい</button>
+        <button class="option-btn" onclick="selectOption(this,'q1',2);hideEl('action-detail');showEl('blocker-detail')">② 準備中</button>
+        <button class="option-btn" onclick="selectOption(this,'q1',3);hideEl('action-detail');showEl('blocker-detail')">③ まだ</button>
+      </div>
+    </div>
+    <div class="q-card" id="action-detail" style="display:none;">
+      <div class="q-label">Q2 — 具体化</div>
+      <div class="q-text">それは何でしたか？</div>
+      <textarea class="free-input" id="action-text" placeholder="ひとことでいい"></textarea>
+      <div style="margin-top:16px;">
+        <div class="q-label" style="margin-bottom:10px;">Q3 — 感触</div>
+        <div class="q-text" style="font-size:14px;margin-bottom:12px;">やってみてどうでしたか？</div>
+        <div class="options">
+          <button class="option-btn" onclick="selectOption(this,'feeling',1)">① 思ったよりできた</button>
+          <button class="option-btn" onclick="selectOption(this,'feeling',2)">② 思ったより難しかった</button>
+          <button class="option-btn" onclick="selectOption(this,'feeling',3)">③ まだわからない</button>
+        </div>
+      </div>
+    </div>
+    <div class="q-card" id="blocker-detail" style="display:none;">
+      <div class="q-label">Q4 — 阻害要因</div>
+      <div class="q-text">何が次の一歩を踏み出しにくくさせていますか？</div>
+      <textarea class="free-input" id="blocker-text" placeholder="ひとことでいい"></textarea>
+    </div>
+  `;
+
+  if (stage === 6) return `
+    <div class="q-card">
+      <div class="q-label">Q1 — 障害の認識</div>
+      <div class="q-text">最近、つらいと感じた場面はありましたか？</div>
+      <div class="options">
+        <button class="option-btn" onclick="selectOption(this,'q1',1);showEl('obstacle-detail')">① はい</button>
+        <button class="option-btn" onclick="selectOption(this,'q1',2);showEl('obstacle-detail')">② 少し</button>
+        <button class="option-btn" onclick="selectOption(this,'q1',3);hideEl('obstacle-detail')">③ いいえ</button>
+      </div>
+    </div>
+    <div class="q-card" id="obstacle-detail" style="display:none;">
+      <div class="q-label">Q2 — 具体化</div>
+      <div class="q-text">それは何でしたか？</div>
+      <textarea class="free-input" id="obstacle-text" placeholder="ひとことでいい"></textarea>
+      <div style="margin-top:16px;">
+        <div class="q-label" style="margin-bottom:10px;">Q3 — 対処</div>
+        <div class="q-text" style="font-size:14px;margin-bottom:12px;">その時、自分はどうしましたか？</div>
+        <div class="options">
+          <button class="option-btn" onclick="selectOption(this,'coping',1)">① 誰かに話した</button>
+          <button class="option-btn" onclick="selectOption(this,'coping',2)">② 自分で考え続けた</button>
+          <button class="option-btn" onclick="selectOption(this,'coping',3);showEl('can-talk-group')">③ 何もできなかった</button>
+          <button class="option-btn" onclick="selectOption(this,'coping',4)">④ その他</button>
+        </div>
+      </div>
+      <div id="can-talk-group" style="display:none;margin-top:16px;">
+        <div class="q-label" style="margin-bottom:10px;">Q4 — サポート確認</div>
+        <div class="q-text" style="font-size:14px;margin-bottom:12px;">今、誰かに話せそうですか？</div>
+        <div class="options">
+          <button class="option-btn" onclick="selectOption(this,'can-talk',1)">① はい</button>
+          <button class="option-btn" onclick="selectOption(this,'can-talk',2)">② まだ難しい</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  if (stage === 7) return `
+    <div class="q-card">
+      <div class="q-label">Q1 — 還元の発生</div>
+      <div class="q-text">最近、誰かの目標のために行動したり、機会を作ったりしましたか？</div>
+      <div class="options">
+        <button class="option-btn" onclick="selectOption(this,'q1',1);showEl('giving-detail')">① はい</button>
+        <button class="option-btn" onclick="selectOption(this,'q1',2);showEl('giving-detail')">② 少し</button>
+        <button class="option-btn" onclick="selectOption(this,'q1',3);hideEl('giving-detail')">③ まだ</button>
+      </div>
+    </div>
+    <div class="q-card" id="giving-detail" style="display:none;">
+      <div class="q-label">Q2 — 具体化</div>
+      <div class="q-text">それは何でしたか？</div>
+      <textarea class="free-input" id="giving-text" placeholder="ひとことでいい"></textarea>
+      <div style="margin-top:16px;">
+        <div class="q-label" style="margin-bottom:10px;">Q3 — 感触</div>
+        <div class="q-text" style="font-size:14px;margin-bottom:12px;">その時、どんな気持ちでしたか？</div>
+        <div class="options">
+          <button class="option-btn" onclick="selectOption(this,'giving-feeling',1)">① 自分がやるべきことをやった感じ</button>
+          <button class="option-btn" onclick="selectOption(this,'giving-feeling',2)">② 誰かの役に立てた感じ</button>
+          <button class="option-btn" onclick="selectOption(this,'giving-feeling',3)">③ 自分も成長できた感じ</button>
+        </div>
+      </div>
+      <div style="margin-top:16px;">
+        <div class="q-label" style="margin-bottom:10px;">Q4 — 次の一歩</div>
+        <div class="q-text" style="font-size:14px;margin-bottom:12px;">次に誰かに渡したいものは何かありますか？</div>
+        <textarea class="free-input" id="next-giving-text" placeholder="ひとことでいい"></textarea>
+      </div>
+    </div>
+  `;
+}
+
+const selectedValues = {};
+
+function selectOption(btn, key, val) {
+  const parent = btn.closest('.options') || btn.parentElement;
+  parent.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedValues[key] = val;
+
+  // Q3表示制御（ステージ3・4）
+  const stage = currentParticipant?.current_stage;
+  if (key === 'q1' && (stage === 3 || stage === 4)) {
+    const branch = document.getElementById('branch-card');
+    if (branch) branch.style.display = val === 3 ? 'block' : 'none';
+  }
+}
+
+function showEl(id) { const el = document.getElementById(id); if (el) el.style.display = 'block'; }
+function hideEl(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
+
+function toggleEmotion(el) { el.classList.toggle('selected'); }
+
+function selectToggle(key, val) {
+  if (key === 'action') {
+    actionSelected = val;
+    document.getElementById('action-yes').classList.toggle('selected', val === 'yes');
+    document.getElementById('action-no').classList.toggle('selected', val === 'no');
+    document.getElementById('action-detail-group').style.display = val === 'yes' ? 'block' : 'none';
+  } else {
+    transformSelected = val;
+    document.getElementById('transform-yes').classList.toggle('selected', val === 'yes');
+    document.getElementById('transform-no').classList.toggle('selected', val === 'no');
+  }
+}
+
+// 参加者の記録送信
+async function submitEvent() {
+  const stage = currentParticipant.current_stage;
+  const msg = document.getElementById('participant-msg');
+  msg.textContent = '送信中...';
+
+  const payload = {
+    participant_id: currentParticipant.id,
+    stage,
+    status_choice: selectedValues['q1'] || null,
+    main_text: document.getElementById('main-text')?.value || null,
+    branch_text: document.getElementById('branch-text')?.value || null,
+    action_taken: selectedValues['q1'] === 1 && stage === 5 ? true : null,
+    action_text: document.getElementById('action-text')?.value || null,
+    action_feeling: selectedValues['feeling'] || null,
+    blocker_text: document.getElementById('blocker-text')?.value || null,
+    obstacle_text: document.getElementById('obstacle-text')?.value || null,
+    coping_choice: selectedValues['coping'] || null,
+    can_talk_now: selectedValues['can-talk'] ? selectedValues['can-talk'] === 1 : null,
+    giving_text: document.getElementById('giving-text')?.value || null,
+    giving_feeling: selectedValues['giving-feeling'] || null,
+    next_giving_text: document.getElementById('next-giving-text')?.value || null,
+  };
+
+  const { error } = await db.from('events').insert(payload);
+
+  if (error) {
+    msg.textContent = 'エラーが発生しました。もう一度お試しください。';
+    msg.style.color = 'var(--red)';
+    return;
+  }
+
+  // AIフィードバック生成
+  const feedback = generateFeedback(stage, selectedValues, payload);
+
+  document.getElementById('participant-form-area').innerHTML = `
+    <div class="success-msg">
+      <div class="check">✦</div>
+      <h3>記録しました</h3>
+      <p>あなたの記録が、覚醒モデルのデータになりました。</p>
+      <div class="ai-feedback">
+        <div class="ai-label">KAKUSEI AGENT</div>
+        <p>${feedback}</p>
+      </div>
+      <button class="submit-btn" onclick="renderParticipantForm()" style="max-width:240px;margin:0 auto;">もう一度記録する</button>
+    </div>
+  `;
+}
+
+function generateFeedback(stage, vals, payload) {
+  const q1 = vals['q1'];
+  const stageTexts = {
+    1: q1 === 1 ? '動きたいという気持ちがある。それだけで十分です。その気持ちの先に、何がありますか？' : q1 === 2 ? 'そのままでいいです。動けないと感じている時、あなたの心の中に何がありますか？' : '動き方がわからない。それは正直な状態です。まず、何が一番気になっていますか？',
+    2: '話せた分だけ、あなたは前に進んでいます。',
+    3: q1 === 3 ? '今日は言えなかった。それでいいです。その言えなかったことが、次の扉かもしれません。' : '何かに気づいた瞬間がある。それが覚醒の始まりです。',
+    4: q1 === 3 ? 'まだ誰かに委ねたい気持ちがある。それを感じていること自体、自分を見ている証拠です。' : '自分で決めた場面があった。その感覚を覚えておいてください。',
+    5: q1 === 1 ? (vals['feeling'] === 1 ? '思ったよりできた。その感覚が、次の挑戦の土台になります。' : '難しかった。それでも動いた。それが一番大事です。') : '準備している。動こうとしている。その状態は、すでに変化の途中です。',
+    6: 'つらい時に記録した。それ自体が、自分を大切にしている証拠です。',
+    7: '誰かのために動いた。あなたは今、渡す側にいます。',
+  };
+  return stageTexts[stage] || 'あなたの記録を受け取りました。';
+}
+
+// 支援者の観察送信
+async function submitObservation() {
+  const msgEl = document.getElementById('supporter-msg');
+  msgEl.textContent = '送信中...';
+  msgEl.style.color = 'var(--muted)';
+
+  const code = document.getElementById('obs-participant-code').value.trim().toUpperCase();
+  if (!code) { msgEl.textContent = '参加者コードを入力してください'; msgEl.style.color = 'var(--red)'; return; }
+
+  const { data: participant } = await db.from('participants').select('id').eq('code', code).single();
+  if (!participant) { msgEl.textContent = '参加者が見つかりません'; msgEl.style.color = 'var(--red)'; return; }
+
+  const selectedEmotions = [...document.querySelectorAll('.emotion-tag.selected')].map(el => el.textContent);
+  const stageBefore = parseInt(document.getElementById('obs-stage-before').value) || null;
+  const stageAfter = parseInt(document.getElementById('obs-stage-after').value) || null;
+  const alertNeeded = document.getElementById('alert-needed').checked;
+
+  const payload = {
+    participant_id: participant.id,
+    supporter_id: 'supporter',
+    supporter_utterance: document.getElementById('obs-utterance').value || null,
+    participant_response: document.getElementById('obs-response').value || null,
+    stage_before: stageBefore,
+    stage_after: stageAfter,
+    stage_changed: stageBefore && stageAfter ? stageBefore !== stageAfter : null,
+    action_triggered: actionSelected === 'yes',
+    action_text: document.getElementById('obs-action-text')?.value || null,
+    emotion_tags: selectedEmotions.length > 0 ? selectedEmotions : null,
+    transform_flag: transformSelected === 'yes',
+    alert_needed: alertNeeded,
+    alert_reason: alertNeeded ? document.getElementById('obs-alert-reason').value : null,
+    note: document.getElementById('obs-note').value || null,
+  };
+
+  const { error } = await db.from('observations').insert(payload);
+
+  if (error) {
+    msgEl.textContent = 'エラーが発生しました';
+    msgEl.style.color = 'var(--red)';
+    return;
+  }
+
+  msgEl.textContent = '✦ 記録を保存しました';
+  msgEl.style.color = 'var(--gold)';
+
+  // フォームリセット
+  setTimeout(() => {
+    document.getElementById('obs-participant-code').value = '';
+    document.getElementById('obs-utterance').value = '';
+    document.getElementById('obs-response').value = '';
+    document.getElementById('obs-stage-before').value = '';
+    document.getElementById('obs-stage-after').value = '';
+    document.getElementById('obs-note').value = '';
+    document.querySelectorAll('.emotion-tag').forEach(t => t.classList.remove('selected'));
+    document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('selected'));
+    document.getElementById('alert-needed').checked = false;
+    document.getElementById('alert-reason-group').style.display = 'none';
+    document.getElementById('action-detail-group').style.display = 'none';
+    actionSelected = null; transformSelected = null;
+    msgEl.textContent = '';
+  }, 2000);
+}
+
+// ディレクター画面
+async function loadDirectorData() {
+  const [
+    { count: programCount },
+    { count: participantCount },
+    { count: eventCount },
+    { data: recentEvents },
+    { data: participants },
+    { data: alerts },
+    { data: triggers }
+  ] = await Promise.all([
+    db.from('programs').select('*', { count: 'exact', head: true }),
+    db.from('participants').select('*', { count: 'exact', head: true }),
+    db.from('events').select('*', { count: 'exact', head: true }),
+    db.from('events').select('id, stage, recorded_at, participant_id').order('recorded_at', { ascending: false }).limit(10),
+    db.from('participants').select('code, nickname, current_stage, is_active, program_id').order('created_at', { ascending: false }),
+    db.from('observations').select('*').eq('alert_needed', true).order('observed_at', { ascending: false }),
+    db.from('observations').select('*').eq('transform_flag', true).order('observed_at', { ascending: false }).limit(20),
+  ]);
+
+  document.getElementById('stat-programs').textContent = programCount || 0;
+  document.getElementById('stat-participants').textContent = participantCount || 0;
+  document.getElementById('stat-events').textContent = eventCount || 0;
+
+  // 最近の記録
+  const recentTbody = document.getElementById('recent-events');
+  if (recentEvents?.length) {
+    recentTbody.innerHTML = recentEvents.map(e => `
+      <tr>
+        <td>${e.participant_id?.slice(0,8)}...</td>
+        <td><span class="stage-pill" style="background:rgba(184,134,11,0.15);color:var(--gold);">${stageKanji[e.stage]} ${stageNames[e.stage]}</span></td>
+        <td>${new Date(e.recorded_at).toLocaleString('ja-JP', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+      </tr>
+    `).join('');
+  } else {
+    recentTbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:24px;">記録がまだありません</td></tr>';
+  }
+
+  // 参加者一覧
+  const partTbody = document.getElementById('participants-list');
+  if (participants?.length) {
+    partTbody.innerHTML = participants.map(p => `
+      <tr>
+        <td>${p.code}</td>
+        <td>${p.nickname || '-'}</td>
+        <td>-</td>
+        <td><span class="stage-pill" style="background:rgba(184,134,11,0.1);color:var(--gold);">${stageKanji[p.current_stage]} ${stageNames[p.current_stage]}</span></td>
+        <td style="color:${p.is_active ? 'var(--success)' : 'var(--muted)'};">${p.is_active ? '参加中' : '終了'}</td>
+      </tr>
+    `).join('');
+  } else {
+    partTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px;">参加者がまだいません</td></tr>';
+  }
+
+  // アラート
+  const alertTbody = document.getElementById('alerts-list');
+  if (alerts?.length) {
+    alertTbody.innerHTML = alerts.map(a => `
+      <tr>
+        <td><span class="alert-dot"></span>${a.participant_id?.slice(0,8)}...</td>
+        <td>${a.alert_reason || '-'}</td>
+        <td>${new Date(a.observed_at).toLocaleString('ja-JP', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+        <td>${a.supporter_id}</td>
+      </tr>
+    `).join('');
+  } else {
+    alertTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px;">アラートはありません</td></tr>';
+  }
+
+  // 変容トリガー
+  const triggerTbody = document.getElementById('triggers-list');
+  if (triggers?.length) {
+    triggerTbody.innerHTML = triggers.map(t => `
+      <tr>
+        <td>${t.participant_id?.slice(0,8)}...</td>
+        <td style="max-width:200px;">${t.supporter_utterance?.slice(0,40) || '-'}${t.supporter_utterance?.length > 40 ? '...' : ''}</td>
+        <td style="max-width:200px;">${t.participant_response?.slice(0,40) || '-'}${t.participant_response?.length > 40 ? '...' : ''}</td>
+        <td>${t.emotion_tags?.join('・') || '-'}</td>
+      </tr>
+    `).join('');
+  } else {
+    triggerTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px;">変容トリガーがまだありません</td></tr>';
+  }
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.dir-tab').forEach((t, i) => {
+    const tabs = ['overview', 'participants', 'alerts', 'triggers'];
+    t.classList.toggle('active', tabs[i] === tab);
+  });
+  ['overview', 'participants', 'alerts', 'triggers'].forEach(t => {
+    const el = document.getElementById(`tab-${t}`);
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+  });
+}
+</script>
+</body>
+</html>
