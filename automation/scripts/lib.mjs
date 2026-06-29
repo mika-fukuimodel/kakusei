@@ -72,7 +72,15 @@ export function buildCaption(post, platform) {
   // Instagram（最大2200文字）
   const bodyParts = [];
   if (post.lead) bodyParts.push(post.lead);
-  if (Array.isArray(post.body)) bodyParts.push(post.body.join("\n\n"));
+  if (Array.isArray(post.points)) {
+    bodyParts.push(
+      post.points
+        .map((p) => `・${p.text}${p.source ? `\n（根拠：${p.source}）` : ""}`)
+        .join("\n\n")
+    );
+  } else if (Array.isArray(post.body)) {
+    bodyParts.push(post.body.map((t) => `・${t}`).join("\n\n"));
+  }
   if (post.closing) bodyParts.push(post.closing);
   return `${title}\n\n${bodyParts.join("\n\n")}\n\n${tags}`;
 }

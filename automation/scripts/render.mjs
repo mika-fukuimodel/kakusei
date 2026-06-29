@@ -12,9 +12,25 @@ const esc = (s = "") =>
 
 function cardHtml(post) {
   const titleHtml = esc(post.title).replace(/\n/g, "<br>");
-  const items = (post.body || [])
-    .map((t) => `<li>${esc(t)}</li>`)
-    .join("");
+  // 新形式: points=[{text, source}] があれば「小項目＋論文的根拠」で描画
+  let items;
+  if (Array.isArray(post.points)) {
+    items = post.points
+      .map(
+        (p) =>
+          `<li>${esc(p.text)}${
+            p.source
+              ? `<div class="source">根拠：${esc(p.source)}</div>`
+              : ""
+          }</li>`
+      )
+      .join("");
+  } else {
+    items = (post.body || []).map((t) => `<li>${esc(t)}</li>`).join("");
+  }
+  const leadHtml = post.lead
+    ? `<div class="lead">${esc(post.lead)}</div>`
+    : "";
   const closing = post.closing
     ? `<div class="closing">「${esc(post.closing)}」</div>`
     : "";
@@ -59,6 +75,13 @@ function cardHtml(post) {
     width:14px; height:14px; border-radius:50%;
     background:var(--gold-light); box-shadow:0 0 14px rgba(212,160,23,.6);
   }
+  /* 「小項目＋論文的根拠」形式は、ゆったり大きめに */
+  ul.points{ gap:46px; }
+  ul.points li{ font-size:35px; line-height:1.55; font-weight:500; }
+  .source{
+    margin-top:16px; font-size:27px; line-height:1.5; color:var(--muted);
+    font-weight:400; padding-left:18px; border-left:2px solid var(--gold);
+  }
   .closing{
     margin-top:auto; font-family:'Shippori Mincho', serif; font-weight:700;
     font-size:38px; line-height:1.5; color:#fff;
@@ -72,8 +95,8 @@ function cardHtml(post) {
 </style></head><body>
   <span class="tag">${esc(post.theme)}</span>
   <h1>${titleHtml}</h1>
-  <div class="lead">${esc(post.lead)}</div>
-  <ul>${items}</ul>
+  ${leadHtml}
+  <ul class="${Array.isArray(post.points) ? "points" : ""}">${items}</ul>
   ${closing}
   <div class="brand"><b>覚醒モデル</b><span>AI × 脳神経科学 × 複雑系</span></div>
 </body></html>`;
