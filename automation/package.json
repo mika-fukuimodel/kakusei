@@ -1,0 +1,16 @@
+{
+  "name": "kakusei-auto-poster",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "覚醒モデル: AI×脳神経科学/複雑系の短い記事を毎日1本ずつ X と Instagram に自動投稿する仕組み",
+  "scripts": {
+    "preview": "node scripts/render.mjs",
+    "render": "node scripts/render.mjs",
+    "post": "node scripts/post-next.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0",
+    "twitter-api-v2": "^1.18.2"
+  }
+}
