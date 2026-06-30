@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>覚醒モデル — AI人生ナビゲーション</title>
+<title>Mira — AI人生ナビゲーション</title>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -165,9 +165,9 @@ textarea.inp{resize:vertical;min-height:80px}
 <!-- ================= ONBOARDING ================= -->
 <div id="onboard">
   <div class="ob-hero">
-    <div class="mark serif">覚</div>
-    <h1 class="serif">覚醒モデル</h1>
-    <p>AI LIFE NAVIGATION OS<br>あなたの人生に、毎日伴走する。</p>
+    <div class="mark serif">✦</div>
+    <h1 class="serif">Mira</h1>
+    <p>YOUR LIFE COMPASS<br>未来を見る習慣を、毎日に。</p>
   </div>
 
   <div class="ob-step on" data-step="0">
@@ -223,8 +223,8 @@ textarea.inp{resize:vertical;min-height:80px}
 <div id="app" class="hidden">
   <div class="topbar">
     <div class="brand">
-      <div class="mark serif">覚</div>
-      <div><b class="serif">覚醒モデル</b><small>LIFE NAVIGATION</small></div>
+      <div class="mark serif">✦</div>
+      <div><b class="serif">Mira</b><small>LIFE NAVIGATION</small></div>
     </div>
     <button class="icon-btn" onclick="openSettings()">⚙</button>
   </div>
@@ -252,9 +252,9 @@ textarea.inp{resize:vertical;min-height:80px}
 
 <script>
 /* =====================================================================
-   覚醒モデル — AI人生ナビゲーションOS  (self-contained prototype)
+   Mira — AI人生ナビゲーションOS  (self-contained prototype)
    ===================================================================== */
-const LS='kakusei_nav_v1';
+const LS='mira_nav_v1';
 let P=load();                       // profile + state
 
 function load(){try{return JSON.parse(localStorage.getItem(LS))||null}catch(e){return null}}
@@ -410,6 +410,7 @@ const ob={step:0,vals:[],
     const dots=[1,2,3];document.getElementById('ob-dots').innerHTML=dots.map(d=>`<i class="${d<=this.step?'on':''}"></i>`).join('');
     document.getElementById('ob-back').style.display=this.step>0?'block':'none';
     document.getElementById('ob-next').textContent=this.step>=3?'完了して始める':'次へ';
+    document.getElementById('ob-next').style.display=this.step>0?'block':'none';
     document.getElementById('ob-dots').style.display=this.step>0?'flex':'none';
   },
   next(){
@@ -610,7 +611,7 @@ function renderCoach(){
   P.chat=P.chat||[];
   if(P.chat.length===0){
     const de=dailyEnergy(P);
-    P.chat.push({role:'ai',text:`こんにちは、${P.name}さん。私はあなたの人生に伴走するAIコーチです。\n\n今日は「${de.theme}」のエネルギー。${P.goalWork?'「'+P.goalWork+'」':'あなたの目標'}に向けて、今日できる一歩を一緒に考えましょう。何でも話してください。`});
+    P.chat.push({role:'ai',text:`こんにちは、${P.name}さん。私はMira、あなたの人生に伴走するAIコーチです。\n\n今日は「${de.theme}」のエネルギー。${P.goalWork?'「'+P.goalWork+'」':'あなたの目標'}に向けて、今日できる一歩を一緒に考えましょう。何でも話してください。`});
   }
   v.innerHTML=`
     <div class="suggest">
@@ -668,7 +669,7 @@ function localCoach(text){
 }
 // optional real Claude call
 async function callClaude(text){
-  const sys=`あなたは「覚醒モデル」という人生ナビゲーションアプリのAIコーチです。占い師ではなく、ユーザーの目標達成に伴走するコーチとして、共感と具体的な行動提案をします。回答は日本語・250字以内・温かく簡潔に。\nユーザー情報：名前=${P.name}, 太陽星座=${buildAstro(P).sun.n}, 価値観=${(P.values||[]).join('・')}, 仕事の目標=${P.goalWork}, 暮らしの目標=${P.goalLife}。今日のテーマ=${dailyEnergy(P).theme}。`;
+  const sys=`あなたは「Mira」という人生ナビゲーションアプリのAIコーチです。占い師ではなく、ユーザーの目標達成に伴走するコーチとして、共感と具体的な行動提案をします。回答は日本語・250字以内・温かく簡潔に。\nユーザー情報：名前=${P.name}, 太陽星座=${buildAstro(P).sun.n}, 価値観=${(P.values||[]).join('・')}, 仕事の目標=${P.goalWork}, 暮らしの目標=${P.goalLife}。今日のテーマ=${dailyEnergy(P).theme}。`;
   const msgs=P.chat.filter(m=>m.text!=='…').slice(-8).map(m=>({role:m.role==='me'?'user':'assistant',content:m.text}));
   const res=await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',headers:{'content-type':'application/json','x-api-key':P.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
