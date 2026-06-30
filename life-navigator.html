@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>覚醒モデル — AI人生ナビゲーション</title>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#15110d; --ink2:#1f1a14; --card:#241e17; --card2:#2b241b;
+  --gold:#c79a3a; --gold-l:#e3c06a; --paper:#f3ead9; --muted:#9b8e76;
+  --line:rgba(199,154,58,.22); --red:#c0564e; --green:#6fae72; --blue:#6f93c0;
+  --shadow:0 14px 40px rgba(0,0,0,.45);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  background:radial-gradient(120% 80% at 50% -10%, #271f15 0%, var(--ink) 55%) fixed;
+  color:var(--paper); font-family:'Noto Sans JP',sans-serif; line-height:1.7;
+  overflow-x:hidden;
+}
+.serif{font-family:'Shippori Mincho',serif}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit}
+.hidden{display:none!important}
+
+/* ============ shell ============ */
+#app{max-width:480px;margin:0 auto;min-height:100vh;position:relative;padding-bottom:84px}
+.topbar{
+  position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px 12px;background:linear-gradient(180deg,var(--ink) 70%,transparent);
+}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .mark{width:30px;height:30px;border:1px solid var(--gold);border-radius:50%;display:grid;place-items:center;color:var(--gold);font-size:15px}
+.brand b{font-family:'Shippori Mincho',serif;font-size:17px;letter-spacing:.18em;color:var(--gold-l);font-weight:700}
+.brand small{display:block;font-size:8px;letter-spacing:.32em;color:var(--muted);margin-top:-2px}
+.icon-btn{background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--paper);width:38px;height:38px;border-radius:11px;font-size:16px;display:grid;place-items:center}
+
+.view{padding:4px 18px 24px;animation:fade .45s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ============ bottom nav ============ */
+.nav{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:14px;width:calc(100% - 28px);max-width:452px;z-index:40;
+  display:grid;grid-template-columns:repeat(5,1fr);gap:2px;padding:7px;
+  background:rgba(28,23,17,.92);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)
+}
+.nav button{background:none;border:none;color:var(--muted);font-size:9.5px;letter-spacing:.04em;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 2px;border-radius:13px;transition:.2s}
+.nav button .ic{font-size:18px;line-height:1}
+.nav button.active{color:var(--gold-l);background:rgba(199,154,58,.12)}
+
+/* ============ cards & ui ============ */
+.card{background:linear-gradient(160deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card-title{font-size:11px;letter-spacing:.22em;color:var(--gold);margin-bottom:12px;display:flex;align-items:center;gap:8px;text-transform:uppercase}
+.card-title .ln{flex:1;height:1px;background:var(--line)}
+.muted{color:var(--muted)}
+.pill{display:inline-block;padding:4px 11px;border:1px solid var(--line);border-radius:999px;font-size:11px;color:var(--gold-l);margin:3px 4px 0 0;background:rgba(199,154,58,.06)}
+.btn{display:block;width:100%;background:linear-gradient(135deg,var(--gold),#a8801f);color:#1a1408;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:700;letter-spacing:.08em}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--paper);font-weight:400}
+.btn:active{transform:scale(.985)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;letter-spacing:.12em;color:var(--muted);margin-bottom:7px}
+.inp{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:11px;padding:13px 15px;color:var(--paper);font-size:15px}
+.inp:focus{outline:none;border-color:var(--gold)}
+textarea.inp{resize:vertical;min-height:80px}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+
+/* ============ onboarding ============ */
+#onboard{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:32px 24px}
+.ob-hero{text-align:center;margin-bottom:30px}
+.ob-hero .mark{width:64px;height:64px;border:1px solid var(--gold);border-radius:50%;display:grid;place-items:center;color:var(--gold);font-size:30px;margin:0 auto 18px;box-shadow:0 0 40px rgba(199,154,58,.25)}
+.ob-hero h1{font-family:'Shippori Mincho',serif;font-size:34px;letter-spacing:.16em;color:var(--gold-l);font-weight:800}
+.ob-hero p{font-size:12px;letter-spacing:.18em;color:var(--muted);margin-top:10px;line-height:1.9}
+.ob-step{display:none}
+.ob-step.on{display:block;animation:fade .4s}
+.dots{display:flex;gap:7px;justify-content:center;margin:22px 0 18px}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--line);transition:.3s}
+.dots i.on{background:var(--gold);width:22px;border-radius:4px}
+.chip-grid{display:flex;flex-wrap:wrap;gap:9px}
+.chip{padding:9px 14px;border:1px solid var(--line);border-radius:999px;font-size:13px;color:var(--paper);background:rgba(255,255,255,.03);transition:.18s}
+.chip.sel{background:linear-gradient(135deg,var(--gold),#a8801f);color:#1a1408;border-color:transparent;font-weight:700}
+
+/* ============ today ============ */
+.hero-energy{position:relative;border-radius:20px;overflow:hidden;padding:22px 20px;margin-bottom:14px;border:1px solid var(--line);
+  background:radial-gradient(120% 130% at 80% 0%, rgba(199,154,58,.22), transparent 60%), linear-gradient(160deg,var(--card),#1c1711)}
+.hero-energy .date{font-size:11px;letter-spacing:.2em;color:var(--gold)}
+.hero-energy h2{font-family:'Shippori Mincho',serif;font-size:23px;line-height:1.5;margin:8px 0 6px}
+.hero-energy .sub{font-size:13px;color:var(--paper);opacity:.85}
+.gauge{display:flex;gap:14px;margin-top:16px}
+.gauge .g{flex:1;text-align:center}
+.gauge .ring{width:54px;height:54px;margin:0 auto 6px}
+.gauge .lbl{font-size:10px;color:var(--muted);letter-spacing:.06em}
+.action-item{display:flex;gap:13px;padding:13px 0;border-top:1px solid var(--line)}
+.action-item:first-of-type{border-top:none}
+.action-item .no{flex:none;width:26px;height:26px;border-radius:8px;background:rgba(199,154,58,.14);color:var(--gold-l);display:grid;place-items:center;font-size:13px;font-weight:700;font-family:'Shippori Mincho',serif}
+.action-item .bd b{font-size:14.5px;display:block}
+.action-item .bd span{font-size:12px;color:var(--muted)}
+.action-item .tm{flex:none;font-size:11px;color:var(--gold);align-self:center}
+.integ{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.integ .i{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:13px;padding:12px}
+.integ .i .h{font-size:10px;color:var(--muted);letter-spacing:.1em;display:flex;align-items:center;gap:6px}
+.integ .i .v{font-size:18px;font-weight:700;margin-top:5px;font-family:'Shippori Mincho',serif}
+.integ .i .d{font-size:10.5px;color:var(--muted)}
+.mood-row{display:flex;justify-content:space-between;gap:6px;margin-top:6px}
+.mood-row button{flex:1;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:11px;padding:10px 0;font-size:22px;transition:.15s}
+.mood-row button.sel{background:rgba(199,154,58,.16);border-color:var(--gold);transform:translateY(-3px)}
+
+/* ============ graph ============ */
+.axis-legend{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;margin-top:8px}
+.axis-legend .a{display:flex;justify-content:space-between;font-size:12px}
+.axis-legend .a b{color:var(--gold-l);font-family:'Shippori Mincho',serif}
+.seg{display:flex;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:11px;padding:3px;margin-bottom:14px}
+.seg button{flex:1;background:none;border:none;color:var(--muted);font-size:12px;padding:8px;border-radius:8px}
+.seg button.on{background:rgba(199,154,58,.16);color:var(--gold-l)}
+
+/* ============ coach ============ */
+.chat{display:flex;flex-direction:column;gap:12px;min-height:46vh}
+.msg{max-width:84%;padding:12px 15px;border-radius:16px;font-size:14px;line-height:1.75;white-space:pre-wrap}
+.msg.ai{align-self:flex-start;background:var(--card2);border:1px solid var(--line);border-bottom-left-radius:5px}
+.msg.me{align-self:flex-end;background:linear-gradient(135deg,var(--gold),#a8801f);color:#1a1408;border-bottom-right-radius:5px}
+.msg.ai b{color:var(--gold-l)}
+.chat-input{position:fixed;bottom:84px;left:50%;transform:translateX(-50%);width:calc(100% - 28px);max-width:452px;display:flex;gap:8px;padding:9px;background:rgba(28,23,17,.95);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+.chat-input input{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--paper);font-size:14px}
+.chat-input input:focus{outline:none;border-color:var(--gold)}
+.chat-input button{flex:none;width:46px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--gold),#a8801f);color:#1a1408;font-size:18px;font-weight:700}
+.suggest{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}
+.suggest button{background:rgba(199,154,58,.07);border:1px solid var(--line);color:var(--gold-l);font-size:11.5px;padding:7px 11px;border-radius:999px}
+
+/* ============ reports ============ */
+.rep-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.rep-card{background:linear-gradient(160deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:16px;padding:16px 14px;text-align:center;transition:.2s}
+.rep-card:active{transform:scale(.97)}
+.rep-card .ico{font-size:26px;display:block;margin-bottom:8px}
+.rep-card b{font-size:14px;font-family:'Shippori Mincho',serif;letter-spacing:.06em}
+.rep-card span{display:block;font-size:10px;color:var(--muted);margin-top:3px}
+.rep-card .lock{font-size:9px;color:var(--gold);margin-top:6px;letter-spacing:.1em}
+
+/* ============ plans ============ */
+.plan{border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:13px;position:relative;background:linear-gradient(160deg,var(--card),var(--card2))}
+.plan.hot{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 14px 40px rgba(0,0,0,.45)}
+.plan .tag{position:absolute;top:-10px;right:16px;background:linear-gradient(135deg,var(--gold),#a8801f);color:#1a1408;font-size:10px;font-weight:700;padding:4px 11px;border-radius:999px;letter-spacing:.08em}
+.plan h3{font-family:'Shippori Mincho',serif;font-size:18px;color:var(--gold-l)}
+.plan .price{font-size:26px;font-weight:800;margin:4px 0 10px}.plan .price small{font-size:12px;color:var(--muted);font-weight:400}
+.plan ul{list-style:none;font-size:12.5px}
+.plan ul li{padding:4px 0 4px 20px;position:relative;color:var(--paper)}
+.plan ul li:before{content:'✦';position:absolute;left:0;color:var(--gold)}
+
+/* ============ modal / sheet ============ */
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:60;display:none;align-items:flex-end;justify-content:center;animation:fade .25s}
+.sheet-bg.on{display:flex}
+.sheet{width:100%;max-width:480px;max-height:88vh;overflow-y:auto;background:linear-gradient(180deg,#241e17,#1c1711);border:1px solid var(--line);border-radius:22px 22px 0 0;padding:10px 20px 30px;animation:up .35s}
+@keyframes up{from{transform:translateY(100%)}to{transform:none}}
+.sheet .grip{width:40px;height:4px;background:var(--line);border-radius:3px;margin:6px auto 16px}
+.sheet h2{font-family:'Shippori Mincho',serif;font-size:22px;color:var(--gold-l);text-align:center}
+.sheet .sub{text-align:center;font-size:11px;color:var(--muted);letter-spacing:.1em;margin-bottom:18px}
+.sheet p{font-size:14px;line-height:1.9;margin-bottom:14px}
+.sheet p b{color:var(--gold-l)}
+.toast{position:fixed;bottom:160px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--gold);color:var(--gold-l);padding:11px 20px;border-radius:999px;font-size:13px;z-index:80;opacity:0;transition:.3s;pointer-events:none}
+.toast.on{opacity:1;bottom:172px}
+</style>
+</head>
+<body>
+
+<!-- ================= ONBOARDING ================= -->
+<div id="onboard">
+  <div class="ob-hero">
+    <div class="mark serif">覚</div>
+    <h1 class="serif">覚醒モデル</h1>
+    <p>AI LIFE NAVIGATION OS<br>あなたの人生に、毎日伴走する。</p>
+  </div>
+
+  <div class="ob-step on" data-step="0">
+    <div class="card">
+      <div class="card-title">はじめに<span class="ln"></span></div>
+      <p class="muted" style="font-size:13.5px">占いではありません。出生図とあなたの目標、毎日の生活データを掛け合わせ、<b style="color:var(--gold-l)">「今日、何を優先すれば人生の目標に近づくか」</b>をAIが提案します。</p>
+      <p class="muted" style="font-size:12px;margin-top:12px">所要 約60秒。データはこの端末内にのみ保存されます。</p>
+    </div>
+    <button class="btn" onclick="ob.next()">はじめる</button>
+  </div>
+
+  <div class="ob-step" data-step="1">
+    <div class="card">
+      <div class="card-title">基本情報<span class="ln"></span></div>
+      <div class="field"><label>ニックネーム</label><input class="inp" id="ob-name" placeholder="呼ばれたい名前"></div>
+      <div class="field"><label>生年月日</label><input class="inp" id="ob-bdate" type="date" value="1990-06-15"></div>
+      <div class="row">
+        <div class="field"><label>出生時間（任意）</label><input class="inp" id="ob-btime" type="time" value="08:30"></div>
+        <div class="field"><label>出生地</label>
+          <select class="inp" id="ob-bplace">
+            <option>北海道</option><option>宮城県</option><option>東京都</option><option>神奈川県</option><option>愛知県</option><option>京都府</option><option>大阪府</option><option>兵庫県</option><option>広島県</option><option>福岡県</option><option>沖縄県</option><option>海外</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ob-step" data-step="2">
+    <div class="card">
+      <div class="card-title">大切にしている価値観<span class="ln"></span></div>
+      <p class="muted" style="font-size:12px;margin-bottom:14px">最大3つ選んでください。提案の方向づけに使います。</p>
+      <div class="chip-grid" id="ob-values"></div>
+    </div>
+  </div>
+
+  <div class="ob-step" data-step="3">
+    <div class="card">
+      <div class="card-title">いま向き合っている目標<span class="ln"></span></div>
+      <p class="muted" style="font-size:12px;margin-bottom:14px">具体的でなくて大丈夫。AIが毎日の行動に翻訳します。</p>
+      <div class="field"><label>仕事・キャリア</label><input class="inp" id="ob-goal-work" placeholder="例：新規事業の立ち上げ"></div>
+      <div class="field"><label>暮らし・健康・人間関係</label><input class="inp" id="ob-goal-life" placeholder="例：体力をつけ、家族の時間を増やす"></div>
+    </div>
+  </div>
+
+  <div class="dots" id="ob-dots"></div>
+  <div class="row">
+    <button class="btn ghost" id="ob-back" onclick="ob.prev()" style="display:none">戻る</button>
+    <button class="btn" id="ob-next" onclick="ob.next()">次へ</button>
+  </div>
+</div>
+
+<!-- ================= MAIN APP ================= -->
+<div id="app" class="hidden">
+  <div class="topbar">
+    <div class="brand">
+      <div class="mark serif">覚</div>
+      <div><b class="serif">覚醒モデル</b><small>LIFE NAVIGATION</small></div>
+    </div>
+    <button class="icon-btn" onclick="openSettings()">⚙</button>
+  </div>
+
+  <div id="view-today" class="view"></div>
+  <div id="view-graph" class="view hidden"></div>
+  <div id="view-coach" class="view hidden"></div>
+  <div id="view-report" class="view hidden"></div>
+  <div id="view-night" class="view hidden"></div>
+
+  <nav class="nav">
+    <button data-tab="today" class="active" onclick="go('today')"><span class="ic">◐</span>今日</button>
+    <button data-tab="graph" onclick="go('graph')"><span class="ic">◈</span>人生グラフ</button>
+    <button data-tab="coach" onclick="go('coach')"><span class="ic">✧</span>AIコーチ</button>
+    <button data-tab="report" onclick="go('report')"><span class="ic">❖</span>診断</button>
+    <button data-tab="night" onclick="go('night')"><span class="ic">☾</span>振り返り</button>
+  </nav>
+</div>
+
+<!-- sheet + toast -->
+<div class="sheet-bg" id="sheet-bg" onclick="if(event.target===this)closeSheet()">
+  <div class="sheet" id="sheet"><div class="grip"></div><div id="sheet-body"></div></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   覚醒モデル — AI人生ナビゲーションOS  (self-contained prototype)
+   ===================================================================== */
+const LS='kakusei_nav_v1';
+let P=load();                       // profile + state
+
+function load(){try{return JSON.parse(localStorage.getItem(LS))||null}catch(e){return null}}
+function save(){localStorage.setItem(LS,JSON.stringify(P))}
+function toast(t){const e=document.getElementById('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),1900)}
+
+/* ---------- deterministic helpers (offline astro/energy engine) ---------- */
+function hash(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0)}
+function rng(seed){let s=seed>>>0;return()=>{s^=s<<13;s^=s>>>17;s^=s<<5;return((s>>>0)%10000)/10000}}
+function pick(arr,seed){return arr[Math.floor(rng(seed)()*arr.length)]}
+function todayKey(d=new Date()){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+
+const SIGNS=[
+ {n:'山羊座',r:'規律と達成',t:['堅実','戦略的','責任感']},{n:'水瓶座',r:'革新と自由',t:['独創的','客観的','先進的']},
+ {n:'魚座',r:'共感と直観',t:['感受性','想像力','献身']},{n:'牡羊座',r:'開拓と勇気',t:['行動力','情熱','率直']},
+ {n:'牡牛座',r:'安定と感性',t:['粘り強さ','美意識','堅実']},{n:'双子座',r:'知性と伝達',t:['好奇心','機転','社交']},
+ {n:'蟹座',r:'保護と情愛',t:['共感','面倒見','記憶力']},{n:'獅子座',r:'表現と誇り',t:['存在感','寛大','創造']},
+ {n:'乙女座',r:'分析と奉仕',t:['緻密','実務','改善力']},{n:'天秤座',r:'調和と美',t:['公平','社交','審美']},
+ {n:'蠍座',r:'探求と変容',t:['集中','洞察','情熱']},{n:'射手座',r:'探究と拡大',t:['楽観','行動','哲学']}
+];
+function sunSign(dateStr){
+  const [y,m,d]=dateStr.split('-').map(Number);
+  const cut=[20,19,21,20,21,21,23,23,23,23,22,22]; // 月ごとの境界
+  let idx=(d<cut[m-1])?(m-1):(m%12); // 0=山羊...
+  // map month to sign index: Jan(山羊/水瓶)
+  const map=[0,1,2,3,4,5,6,7,8,9,10,11]; // already aligned by construction below
+  return SIGNS[idx];
+}
+const ELEMS=['火','地','風','水'];
+const AXES=[
+  {k:'work',n:'仕事運',c:'#e3c06a'},{k:'health',n:'健康',c:'#6fae72'},
+  {k:'love',n:'恋愛',c:'#c0564e'},{k:'money',n:'お金',c:'#d8a64a'},
+  {k:'happy',n:'幸福度',c:'#6f93c0'},{k:'self',n:'自己効力感',c:'#b07fc0'}
+];
+
+// build full astro profile from birth data
+function buildAstro(p){
+  const sun=sunSign(p.bdate);
+  const seed=hash(p.bdate+'|'+(p.btime||'')+'|'+(p.bplace||''));
+  const moon=SIGNS[seed%12], asc=SIGNS[(seed>>>4)%12], el=ELEMS[(seed>>>8)%4];
+  return {sun,moon,asc,el};
+}
+
+// daily energy: deterministic per (birth, date), 6 axes 0-100 + theme
+function dailyEnergy(p,d=new Date()){
+  const base=hash(p.bdate+'|'+todayKey(d));
+  const en={};
+  AXES.forEach((a,i)=>{
+    const r=rng(base+ i*7919);
+    en[a.k]=Math.round(42+r()*53);                 // 42-95
+  });
+  const themes=[
+    ['対話','人と話すと道が開く一日。重要な会話を前倒しに。'],
+    ['集中','内に向かう力が強い。ひとつの物事を深める好機。'],
+    ['決断','判断力が冴える。先延ばしの決定を片付けて。'],
+    ['仕込み','種まきに向く日。準備・段取りが後で効く。'],
+    ['発信','表現と発信が伸びる。アウトプットを世に出して。'],
+    ['整える','足元を整える日。健康・環境・人間関係の手入れを。'],
+    ['つながり','縁が動く日。紹介・再会・協力が生まれやすい。']
+  ];
+  const th=themes[base%themes.length];
+  // best window
+  const hrs=['午前9–11時','午後2–4時','夕方17–19時','午前10–12時'];
+  const win=hrs[(base>>>3)%hrs.length];
+  return {en,theme:th[0],desc:th[1],window:win,score:Math.round(Object.values(en).reduce((a,b)=>a+b,0)/6)};
+}
+
+// turn goals+energy+mock data into 3 distinct priority actions
+function priorityActions(p){
+  const de=dailyEnergy(p), en=de.en;
+  const work=(p.goalWork||'今の目標').trim();
+  const life=(p.goalLife||'暮らし').trim();
+  // one candidate action per axis: high energy -> leverage, low -> repair
+  const byAxis={
+    work: en.work>=68
+      ? {t:`「${work}」の最重要タスクを1つだけ前進`,s:'仕事運が高い。重い意思決定はこの時間に',tm:de.window}
+      : {t:`「${work}」を15分だけ着手`,s:'勢いより継続。小さく動かして流れを作る',tm:'午前中'},
+    health: en.health>=68
+      ? {t:'運動量を1段あげる（早歩き・階段）',s:'体の調子が良い日。動ける時に動く',tm:'日中'}
+      : {t:'20分の散歩か軽いストレッチ',s:'健康スコアが低め。身体を動かして回復を',tm:'昼休み'},
+    love: en.love>=68
+      ? {t:'大切な人へ一言、感謝を伝える',s:'関係性の運が良い。短い連絡で十分',tm:'夜'}
+      : {t:'相手の話を最後まで聴く',s:'今日は受け取る側に回ると整う',tm:'いつでも'},
+    money: en.money>=68
+      ? {t:'お金まわりの判断を1つ進める',s:'金運が高い。見直し・申請・交渉に好機',tm:'午後'}
+      : {t:'今日の支出を1つだけ見直す',s:'小さな最適化を積み重ねる',tm:'夜'},
+    happy: {t:'5分の振り返りで「できたこと」を3つ書く',s:'幸福度を底上げ。自己効力感にも効く',tm:'就寝前'},
+    self: {t:`「${life}」につながる小さな一歩`,s:'暮らしの目標を1日1ミリ前へ',tm:'いつでも'}
+  };
+  // priority: highest-energy axis (leverage) + lowest-energy axis (repair) + remaining by energy
+  const order=Object.keys(byAxis).sort((a,b)=>en[b]-en[a]); // high -> low
+  const seq=[order[0], order[order.length-1], ...order.slice(1,-1)];
+  const seen=new Set(), out=[];
+  for(const k of seq){
+    const a=byAxis[k];
+    if(seen.has(a.t))continue;
+    seen.add(a.t); out.push({...a,no:out.length+1});
+    if(out.length===3)break;
+  }
+  return out;
+}
+
+// mock life-data integrations (would be Google Calendar / HealthKit etc.)
+function mockData(p){
+  const s=hash(todayKey()+p.bdate);const r=rng(s);
+  return{
+    sleep:(5.5+r()*3).toFixed(1),
+    hr:Math.round(58+r()*14),
+    events:Math.round(r()*4),
+    steps:Math.round(2000+r()*8000)
+  };
+}
+
+/* ---------- 30-day life graph history (computed + nightly logs) ---------- */
+function history(p){
+  P.logs=P.logs||{};
+  const arr=[];const today=new Date();
+  for(let i=29;i>=0;i--){
+    const d=new Date(today);d.setDate(d.getDate()-i);
+    const key=todayKey(d);const de=dailyEnergy(p,d);
+    const log=P.logs[key];
+    const vals={};
+    AXES.forEach(a=>{
+      let v=de.en[a.k];
+      if(log){ // nightly reflection nudges axes
+        if(a.k==='happy')v=Math.round(v*.5+log.mood*20*.5);
+        if(a.k==='self')v=Math.round(v*.55+(log.done?85:45)*.45);
+      }
+      vals[a.k]=Math.max(5,Math.min(100,v));
+    });
+    arr.push({key,vals,logged:!!log});
+  }
+  return arr;
+}
+
+/* =====================================================================
+   ONBOARDING
+   ===================================================================== */
+const VALUES=['成長','自由','貢献','安定','創造','つながり','健康','挑戦','誠実','美意識','家族','学び'];
+const ob={step:0,vals:[],
+  init(){
+    const g=document.getElementById('ob-values');
+    g.innerHTML=VALUES.map(v=>`<button class="chip" onclick="ob.toggle('${v}',this)">${v}</button>`).join('');
+    this.render();
+  },
+  toggle(v,el){
+    const i=this.vals.indexOf(v);
+    if(i>=0){this.vals.splice(i,1);el.classList.remove('sel')}
+    else{if(this.vals.length>=3){toast('価値観は3つまで');return}this.vals.push(v);el.classList.add('sel')}
+  },
+  render(){
+    document.querySelectorAll('.ob-step').forEach(s=>s.classList.toggle('on',+s.dataset.step===this.step));
+    const dots=[1,2,3];document.getElementById('ob-dots').innerHTML=dots.map(d=>`<i class="${d<=this.step?'on':''}"></i>`).join('');
+    document.getElementById('ob-back').style.display=this.step>0?'block':'none';
+    document.getElementById('ob-next').textContent=this.step>=3?'完了して始める':'次へ';
+    document.getElementById('ob-dots').style.display=this.step>0?'flex':'none';
+  },
+  next(){
+    if(this.step===1){
+      const nm=document.getElementById('ob-name').value.trim();
+      if(!nm){toast('ニックネームを入力してください');return}
+    }
+    if(this.step>=3){return this.finish()}
+    this.step++;this.render();
+  },
+  prev(){if(this.step>0){this.step--;this.render()}},
+  finish(){
+    P={
+      name:document.getElementById('ob-name').value.trim()||'あなた',
+      bdate:document.getElementById('ob-bdate').value,
+      btime:document.getElementById('ob-btime').value,
+      bplace:document.getElementById('ob-bplace').value,
+      values:this.vals,
+      goalWork:document.getElementById('ob-goal-work').value.trim(),
+      goalLife:document.getElementById('ob-goal-life').value.trim(),
+      plan:'free',apiKey:'',model:'claude-sonnet-4-6',
+      logs:{},chat:[],created:todayKey()
+    };
+    save();
+    document.getElementById('onboard').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    go('today');
+    setTimeout(()=>toast('ようこそ、'+P.name+'さん'),400);
+  }
+};
+
+/* =====================================================================
+   NAVIGATION
+   ===================================================================== */
+function go(tab){
+  ['today','graph','coach','report','night'].forEach(t=>{
+    document.getElementById('view-'+t).classList.toggle('hidden',t!==tab);
+    const b=document.querySelector(`.nav [data-tab="${t}"]`);if(b)b.classList.toggle('active',t===tab);
+  });
+  document.querySelectorAll('.chat-input').forEach(e=>e.remove());
+  if(tab==='today')renderToday();
+  if(tab==='graph')renderGraph();
+  if(tab==='coach')renderCoach();
+  if(tab==='report')renderReport();
+  if(tab==='night')renderNight();
+  window.scrollTo(0,0);
+}
+
+/* ---------- ring svg ---------- */
+function ring(val,color,label){
+  const r=22,c=2*Math.PI*r,off=c*(1-val/100);
+  return `<div class="g"><svg class="ring" viewBox="0 0 54 54">
+    <circle cx="27" cy="27" r="${r}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="5"/>
+    <circle cx="27" cy="27" r="${r}" fill="none" stroke="${color}" stroke-width="5" stroke-linecap="round"
+      stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 27 27)"/>
+    <text x="27" y="31" text-anchor="middle" font-size="13" fill="${color}" font-family="Shippori Mincho">${val}</text>
+  </svg><div class="lbl">${label}</div></div>`;
+}
+
+/* =====================================================================
+   TODAY
+   ===================================================================== */
+function renderToday(){
+  const de=dailyEnergy(P), acts=priorityActions(P), md=mockData(P), astro=buildAstro(P);
+  const now=new Date();
+  const dstr=`${now.getMonth()+1}月${now.getDate()}日 (${'日月火水木金土'[now.getDay()]})`;
+  const greet=now.getHours()<11?'おはようございます':now.getHours()<17?'こんにちは':'こんばんは';
+  const top3=AXES.map(a=>({...a,v:de.en[a.k]})).sort((x,y)=>y.v-x.v).slice(0,3);
+  const v=document.getElementById('view-today');
+  v.innerHTML=`
+    <div class="hero-energy">
+      <div class="date">${dstr} ・ 総合エネルギー ${de.score}</div>
+      <h2 class="serif">${greet}、${P.name}さん。<br>今日は「${de.theme}」の日。</h2>
+      <div class="sub">${de.desc}</div>
+      <div class="gauge">${top3.map(a=>ring(a.v,a.c,a.n)).join('')}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">今日の優先アクション<span class="ln"></span><span class="muted" style="font-size:10px">AI提案</span></div>
+      ${acts.map(a=>`<div class="action-item">
+        <div class="no serif">${a.no}</div>
+        <div class="bd"><b>${a.t}</b><span>${a.s}</span></div>
+        <div class="tm">${a.tm}</div>
+      </div>`).join('')}
+      <button class="btn ghost" style="margin-top:12px" onclick="go('coach');setTimeout(()=>askCoach('今日の優先アクションについて、最初の一歩を一緒に決めて'),200)">この計画をAIコーチと深める →</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">生活データ連携<span class="ln"></span><span class="muted" style="font-size:10px">デモ値</span></div>
+      <div class="integ">
+        <div class="i"><div class="h">☾ 睡眠</div><div class="v">${md.sleep}h</div><div class="d">${md.sleep<6.5?'やや不足。午後に5分の休息を':'十分。集中力を活かせる'}</div></div>
+        <div class="i"><div class="h">♥ 安静時心拍</div><div class="v">${md.hr}<span style="font-size:11px">bpm</span></div><div class="d">${md.hr>68?'やや高め。深呼吸を意識':'落ち着いた状態'}</div></div>
+        <div class="i"><div class="h">▤ 予定</div><div class="v">${md.events}件</div><div class="d">最適な時間帯：${de.window}</div></div>
+        <div class="i"><div class="h">⤴ 歩数</div><div class="v">${md.steps.toLocaleString()}</div><div class="d">${md.steps<5000?'もう少し動きたい':'よく動けている'}</div></div>
+      </div>
+      <p class="muted" style="font-size:10.5px;margin-top:10px">※本番では Google カレンダー / HealthKit / Google Fit と連携</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">いまの気分は？<span class="ln"></span></div>
+      <p class="muted" style="font-size:12px">記録すると今夜の振り返りと人生グラフに反映されます。</p>
+      <div class="mood-row" id="mood-quick">
+        ${[1,2,3,4,5].map(m=>`<button onclick="quickMood(${m},this)">${['😔','😕','😐','🙂','😊'][m-1]}</button>`).join('')}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">あなたの出生図<span class="ln"></span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="pill">太陽 ${astro.sun.n}</span><span class="pill">月 ${astro.moon.n}</span>
+        <span class="pill">ASC ${astro.asc.n}</span><span class="pill">${astro.el}のエレメント</span>
+      </div>
+      <p class="muted" style="font-size:12.5px;margin-top:12px">核となるテーマは<b style="color:var(--gold-l)">「${astro.sun.r}」</b>。${astro.sun.t.join('・')}の資質を、今日の「${de.theme}」に活かしましょう。</p>
+    </div>`;
+}
+function quickMood(m,el){
+  document.querySelectorAll('#mood-quick button').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');
+  const k=todayKey();P.logs[k]={...(P.logs[k]||{done:false,note:''}),mood:m};save();
+  toast('気分を記録しました');
+}
+
+/* =====================================================================
+   LIFE GRAPH
+   ===================================================================== */
+let graphMode='radar';
+function renderGraph(){
+  const v=document.getElementById('view-graph');
+  const hist=history(P), latest=hist[hist.length-1].vals;
+  v.innerHTML=`
+    <div class="seg">
+      <button class="${graphMode==='radar'?'on':''}" onclick="graphMode='radar';renderGraph()">今日のバランス</button>
+      <button class="${graphMode==='trend'?'on':''}" onclick="graphMode='trend';renderGraph()">30日の推移</button>
+    </div>
+    <div class="card">
+      <div class="card-title">${graphMode==='radar'?'人生の6軸バランス':'幸福度・自己効力感の推移'}<span class="ln"></span></div>
+      ${graphMode==='radar'?radarSVG(latest):trendSVG(hist)}
+    </div>
+    <div class="card">
+      <div class="card-title">今日のスコア<span class="ln"></span></div>
+      <div class="axis-legend">
+        ${AXES.map(a=>`<div class="a"><span><span style="color:${a.c}">●</span> ${a.n}</span><b>${latest[a.k]}</b></div>`).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">AIによる読み解き<span class="ln"></span></div>
+      <p style="font-size:13.5px">${graphInsight(latest,hist)}</p>
+      <button class="btn ghost" style="margin-top:12px" onclick="go('coach');setTimeout(()=>askCoach('人生グラフで一番低い軸を上げるには？'),200)">弱い軸の伸ばし方を相談 →</button>
+    </div>`;
+}
+function radarSVG(vals){
+  const cx=150,cy=140,R=100,n=AXES.length;
+  const pt=(i,r)=>{const ang=-Math.PI/2+i*2*Math.PI/n;return[cx+r*Math.cos(ang),cy+r*Math.sin(ang)]};
+  let grid='';
+  [.25,.5,.75,1].forEach(f=>{
+    const p=AXES.map((_,i)=>pt(i,R*f).join(',')).join(' ');
+    grid+=`<polygon points="${p}" fill="none" stroke="rgba(255,255,255,.08)"/>`;
+  });
+  let spokes='',labels='';
+  AXES.forEach((a,i)=>{
+    const[x,y]=pt(i,R);spokes+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="rgba(255,255,255,.06)"/>`;
+    const[lx,ly]=pt(i,R+22);
+    labels+=`<text x="${lx}" y="${ly+4}" text-anchor="middle" font-size="11" fill="${a.c}" font-family="Shippori Mincho">${a.n}</text>`;
+  });
+  const poly=AXES.map((a,i)=>pt(i,R*vals[a.k]/100).join(',')).join(' ');
+  let dots=AXES.map((a,i)=>{const[x,y]=pt(i,R*vals[a.k]/100);return`<circle cx="${x}" cy="${y}" r="3" fill="${a.c}"/>`}).join('');
+  return `<svg viewBox="0 0 300 290" style="width:100%">${grid}${spokes}
+    <polygon points="${poly}" fill="rgba(199,154,58,.22)" stroke="var(--gold)" stroke-width="2"/>${dots}${labels}</svg>`;
+}
+function trendSVG(hist){
+  const W=300,H=200,pad=24;
+  const xs=i=>pad+i*(W-pad*2)/(hist.length-1);
+  const ys=v=>H-pad-(v/100)*(H-pad*2);
+  const line=(k,c)=>{
+    const d=hist.map((h,i)=>`${i===0?'M':'L'}${xs(i).toFixed(1)},${ys(h.vals[k]).toFixed(1)}`).join(' ');
+    return`<path d="${d}" fill="none" stroke="${c}" stroke-width="2"/>`;
+  };
+  let grid='';[0,25,50,75,100].forEach(g=>{const y=ys(g);grid+=`<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="rgba(255,255,255,.06)"/><text x="2" y="${y+3}" font-size="8" fill="var(--muted)">${g}</text>`});
+  let marks=hist.map((h,i)=>h.logged?`<circle cx="${xs(i)}" cy="${ys(h.vals.happy)}" r="2.5" fill="#6f93c0"/>`:'').join('');
+  return `<svg viewBox="0 0 300 210" style="width:100%">${grid}
+    ${line('happy','#6f93c0')}${line('self','#b07fc0')}${marks}</svg>
+    <div style="display:flex;gap:16px;justify-content:center;font-size:11px;margin-top:6px">
+      <span><span style="color:#6f93c0">●</span> 幸福度</span><span><span style="color:#b07fc0">●</span> 自己効力感</span>
+      <span class="muted">● = 記録あり</span></div>`;
+}
+function graphInsight(v,hist){
+  const sorted=AXES.map(a=>({...a,v:v[a.k]})).sort((x,y)=>x.v-y.v);
+  const low=sorted[0],high=sorted[sorted.length-1];
+  const logged=hist.filter(h=>h.logged).length;
+  const tips={work:'最重要タスクを1日1つに絞る',health:'睡眠と20分の運動を最優先に',love:'大切な人に短い連絡を1通',money:'固定費か収入源を1つ見直す',happy:'できたことを毎晩3つ記録する',self:'小さく宣言して小さく実行する'};
+  return `今のあなたの強みは<b>「${high.n}」(${high.v})</b>。一方で<b>「${low.n}」(${low.v})</b>が伸びしろです。まずは『${tips[low.k]}』から。直近30日で振り返りを記録した日は<b>${logged}日</b>。記録が増えるほど提案の精度が上がります。`;
+}
+
+/* =====================================================================
+   AI COACH
+   ===================================================================== */
+function renderCoach(){
+  const v=document.getElementById('view-coach');
+  P.chat=P.chat||[];
+  if(P.chat.length===0){
+    const de=dailyEnergy(P);
+    P.chat.push({role:'ai',text:`こんにちは、${P.name}さん。私はあなたの人生に伴走するAIコーチです。\n\n今日は「${de.theme}」のエネルギー。${P.goalWork?'「'+P.goalWork+'」':'あなたの目標'}に向けて、今日できる一歩を一緒に考えましょう。何でも話してください。`});
+  }
+  v.innerHTML=`
+    <div class="suggest">
+      <button onclick="askCoach('今日、何から始めればいい？')">今日何から始める？</button>
+      <button onclick="askCoach('やる気が出ないときどうすれば？')">やる気が出ない</button>
+      <button onclick="askCoach('${(P.goalWork||'目標').replace(/'/g,'')}を前に進めたい')">目標を前に進めたい</button>
+      <button onclick="askCoach('今週の優先順位を整理したい')">優先順位を整理</button>
+    </div>
+    <div class="chat" id="chat"></div>`;
+  const inp=document.createElement('div');inp.className='chat-input';
+  inp.innerHTML=`<input id="chat-inp" placeholder="コーチに相談する…" onkeydown="if(event.key==='Enter')sendCoach()"><button onclick="sendCoach()">➤</button>`;
+  document.body.appendChild(inp);
+  drawChat();
+}
+function drawChat(){
+  const c=document.getElementById('chat');if(!c)return;
+  c.innerHTML=P.chat.map(m=>`<div class="msg ${m.role}">${m.text.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')}</div>`).join('');
+  c.scrollTop=c.scrollHeight;window.scrollTo(0,document.body.scrollHeight);
+}
+function sendCoach(){const i=document.getElementById('chat-inp');const t=i.value.trim();if(!t)return;i.value='';askCoach(t)}
+async function askCoach(text){
+  if(document.getElementById('view-coach').classList.contains('hidden'))go('coach');
+  P.chat.push({role:'me',text});drawChat();save();
+  P.chat.push({role:'ai',text:'…'});drawChat();
+  let reply;
+  if(P.apiKey){
+    try{reply=await callClaude(text)}catch(e){reply='（API接続に失敗しました：'+e.message+'）\n\n'+localCoach(text)}
+  }else{
+    await new Promise(r=>setTimeout(r,500));reply=localCoach(text);
+  }
+  P.chat[P.chat.length-1]={role:'ai',text:reply};drawChat();save();
+}
+// local rule-based coach (works fully offline)
+function localCoach(text){
+  const de=dailyEnergy(P),astro=buildAstro(P),acts=priorityActions(P);
+  const t=text.toLowerCase();
+  const intro=pick([`${P.name}さん、`,'なるほど。','いいですね。','一緒に考えましょう。'],hash(text));
+  if(/やる気|モチベ|だるい|つらい|疲/.test(text)){
+    return `${intro}まず、やる気は「出すもの」ではなく「動くと後からついてくるもの」です。\n\n今日は「${de.theme}」の日。**5分だけ**で終わる作業を1つだけ選んでみましょう。例えば「${acts[0].t}」を、たった5分。\n\n${astro.sun.t[0]}なあなたなら、動き出せば流れに乗れます。終わったら、その感覚を覚えておいてください。`;
+  }
+  if(/優先|整理|計画|スケジュール/.test(text)){
+    return `${intro}今日のエネルギー配分から優先順位を整理しました。\n\n**1. ${acts[0].t}**（${acts[0].tm}）\n**2. ${acts[1].t}**（${acts[1].tm}）\n**3. ${acts[2].t}**（${acts[2].tm}）\n\n重い意思決定は**${de.window}**が好機です。それ以外は流れに任せて大丈夫。`;
+  }
+  if(/恋愛|好き|パートナー|恋人|関係/.test(text)){
+    return `${intro}今日の恋愛運は${de.en.love}。${de.en.love>=68?'関係性が動きやすい日です。短くても気持ちを言葉にするのが吉。':'焦らず、相手の話を聞く側に回ると良い日です。'}\n\nあなたの月星座は${astro.moon.n}。感情の出し方に「${astro.moon.t[0]}」が出ます。それを意識すると伝わり方が変わります。`;
+  }
+  if(/仕事|キャリア|事業|転職|目標/.test(text)){
+    const g=P.goalWork||'目標';
+    return `${intro}「${g}」ですね。今日の仕事運は${de.en.work}。\n\n${de.en.work>=70?'判断力が冴える日です。先延ばしにしていた1つの決定を、今日片付けましょう。':'大きく動くより、土台を整える日。次の一手の準備に時間を使うと後で効きます。'}\n\n具体的には「**${acts[0].t}**」から。${astro.sun.r}があなたの核なので、そこに沿う選択ほど力が出ます。`;
+  }
+  if(/今日|何から|始め/.test(text)){
+    return `${intro}今日の最初の一歩はこれです。\n\n**「${acts[0].t}」**\n${acts[0].s}（おすすめ：${acts[0].tm}）\n\nまずこれ1つだけ。終わったら振り返りに記録しておくと、明日の提案がより合ってきます。`;
+  }
+  return `${intro}今日は「${de.theme}」のエネルギー（総合${de.score}）。${de.desc}\n\nあなたの核は${astro.sun.r}。その強みを活かすなら、今日は「**${acts[0].t}**」から始めるのがおすすめです。\n\nもう少し具体的に状況を教えてもらえれば、一緒に次の一手を決めましょう。`;
+}
+// optional real Claude call
+async function callClaude(text){
+  const sys=`あなたは「覚醒モデル」という人生ナビゲーションアプリのAIコーチです。占い師ではなく、ユーザーの目標達成に伴走するコーチとして、共感と具体的な行動提案をします。回答は日本語・250字以内・温かく簡潔に。\nユーザー情報：名前=${P.name}, 太陽星座=${buildAstro(P).sun.n}, 価値観=${(P.values||[]).join('・')}, 仕事の目標=${P.goalWork}, 暮らしの目標=${P.goalLife}。今日のテーマ=${dailyEnergy(P).theme}。`;
+  const msgs=P.chat.filter(m=>m.text!=='…').slice(-8).map(m=>({role:m.role==='me'?'user':'assistant',content:m.text}));
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',headers:{'content-type':'application/json','x-api-key':P.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:P.model||'claude-sonnet-4-6',max_tokens:600,system:sys,messages:msgs})
+  });
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  const j=await res.json();return j.content[0].text;
+}
+
+/* =====================================================================
+   REPORTS (diagnosis)
+   ===================================================================== */
+const REPORTS=[
+  {k:'character',ico:'❖',n:'性格',d:'核となる気質',free:true},
+  {k:'love',ico:'❤',n:'恋愛',d:'愛し方の傾向',free:false},
+  {k:'work',ico:'✦',n:'仕事',d:'才能と適性',free:false},
+  {k:'fortune',ico:'☉',n:'年運',d:'2026の流れ',free:false},
+  {k:'match',ico:'∞',n:'相性',d:'二人の出生図',free:false},
+  {k:'palm',ico:'✋',n:'手相',d:'AI画像解析',free:false},
+  {k:'maya',ico:'◈',n:'マヤ暦',d:'KIN診断',free:false},
+  {k:'soul',ico:'✧',n:'魂の傾向',d:'内なる声',free:false}
+];
+function renderReport(){
+  const astro=buildAstro(P);
+  const v=document.getElementById('view-report');
+  v.innerHTML=`
+    <div class="card">
+      <div class="card-title">あなたの出生図サマリー<span class="ln"></span></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span class="pill">太陽 ${astro.sun.n}</span><span class="pill">月 ${astro.moon.n}</span><span class="pill">ASC ${astro.asc.n}</span>
+      </div>
+      <p class="muted" style="font-size:12.5px;margin-top:10px">${P.bdate} ${P.btime||''} ／ ${P.bplace}</p>
+    </div>
+    <div class="rep-grid">
+      ${REPORTS.map(r=>`<div class="rep-card" onclick="openReport('${r.k}')">
+        <span class="ico" style="color:var(--gold)">${r.ico}</span>
+        <b>${r.n}</b><span>${r.d}</span>
+        ${r.free||P.plan!=='free'?'':'<div class="lock">🔒 ライト〜</div>'}
+      </div>`).join('')}
+    </div>
+    <p class="muted" style="font-size:11px;text-align:center;margin-top:16px">※本番では Swiss Ephemeris による精密計算と手相画像AIに差し替え</p>`;
+}
+function openReport(k){
+  const r=REPORTS.find(x=>x.k===k);
+  if(!r.free&&P.plan==='free'){return openPlans('「'+r.n+'」はライトプラン以上で解放されます')}
+  const astro=buildAstro(P),de=dailyEnergy(P);
+  const seed=hash(P.bdate+k);
+  let body='';
+  const gen={
+    character:()=>`<p>あなたの核は太陽<b>${astro.sun.n}</b>＝「${astro.sun.r}」。${astro.sun.t.join('・')}という資質が、人生の土台になっています。</p>
+      <p>月星座<b>${astro.moon.n}</b>は感情の動き方。${astro.moon.t[0]}な内面を持ち、ASC<b>${astro.asc.n}</b>として外には${astro.asc.t[0]}な印象を与えます。</p>
+      <p>${astro.el}のエレメントが強く、${({火:'情熱と直感で動く',地:'現実と継続で築く',風:'知性と対話で広げる',水:'共感と感受性でつなぐ'})[astro.el]}タイプ。価値観として選んだ「${(P.values||['成長']).join('・')}」と響き合っています。</p>`,
+    love:()=>`<p>恋愛では月<b>${astro.moon.n}</b>の影響が強く出ます。${astro.moon.t[0]}さが愛情表現の核。</p><p>${astro.sun.t[1]}な太陽の性質から、関係の中でも「${astro.sun.r}」を求めがち。相手に同じ温度を求めすぎないことが鍵です。</p><p>今日の恋愛運は<b>${de.en.love}</b>。${de.en.love>=68?'関係が動きやすい好機。':'聞き役に回ると良い時期。'}</p>`,
+    work:()=>`<p>仕事の才能は太陽<b>${astro.sun.n}</b>＝「${astro.sun.r}」に表れます。${astro.sun.t.join('・')}を活かせる環境で力を発揮。</p><p>ASC<b>${astro.asc.n}</b>が示す第一印象は${astro.asc.t[0]}。チームでは「${astro.asc.t[1]}」役を担うと信頼されます。</p><p>「${P.goalWork||'目標'}」に向けては、${astro.el==='地'?'計画と継続':'勢いと発想'}を武器に。</p>`,
+    fortune:()=>`<p>2026年のあなたは「${de.theme}」がキーワードになる流れ。${de.desc}</p><p>前半は<b>仕込み</b>の時期、後半に<b>収穫</b>が訪れる配置。${astro.sun.r}を軸に種をまくと、来年以降に大きく育ちます。</p><p>注意したいのは「${AXES.find(a=>de.en[a.k]===Math.min(...AXES.map(x=>de.en[x.k]))).n}」。意識的にケアを。</p>`,
+    match:()=>`<p>相性診断では、相手の出生情報を加えて2つの出生図を比較します（本番機能）。</p><p>あなた側の傾向：太陽<b>${astro.sun.n}</b>は、${({火:'風・火',地:'水・地',風:'火・風',水:'地・水'})[astro.el]}のエレメントと自然に調和します。</p><p class="muted">相手の生年月日を入力すると、アスペクトに基づく具体的な相性レポートが生成されます。</p>`,
+    palm:()=>`<p>手相はカメラで撮影 → AIが手のひらの主要線（生命線・知能線・感情線）を抽出 → 特徴量から文章を生成します（本番機能）。</p><p class="muted">現在はデモのため、出生図ベースの傾向を表示：あなたは「${astro.sun.r}」の生き方が手にも表れやすいタイプです。</p>`,
+    maya:()=>{const kin=(seed%260)+1;return`<p>マヤ暦のKINは<b>${kin}</b>。20の太陽の紋章と13の銀河の音で、あなたの本質を読み解きます。</p><p>今日のあなたのテーマ「${de.theme}」は、KIN${kin}の流れとも重なります。${astro.sun.t[2]}を意識する一日に。</p>`},
+    soul:()=>`<p>あなたの魂が向かう方向は「${astro.sun.r}」。表面の${astro.asc.t[0]}さの奥に、${astro.moon.t[1]}という静かな願いがあります。</p><p>価値観に選んだ「${(P.values||['成長'])[0]}」は、まさに魂の羅針盤。迷ったときは、ここに立ち返ってください。</p>`
+  };
+  body=gen[k]?gen[k]():'<p>準備中</p>';
+  openSheet(`<h2 class="serif">${r.ico} ${r.n}</h2><div class="sub">${r.d.toUpperCase()}</div>${body}
+    <button class="btn" style="margin-top:8px" onclick="closeSheet();go('coach');setTimeout(()=>askCoach('${r.n}の結果について、今日活かせることは？'),250)">この結果をAIコーチと話す</button>`);
+}
+
+/* =====================================================================
+   NIGHT REVIEW
+   ===================================================================== */
+function renderNight(){
+  const k=todayKey();const log=P.logs[k]||{};
+  const v=document.getElementById('view-night');
+  v.innerHTML=`
+    <div class="card">
+      <div class="card-title">今夜の振り返り<span class="ln"></span></div>
+      <p class="muted" style="font-size:13px">1日の終わりに30秒。記録が人生グラフを育て、明日の提案を磨きます。</p>
+    </div>
+    <div class="card">
+      <div class="card-title">今日の気分<span class="ln"></span></div>
+      <div class="mood-row" id="mood-night">
+        ${[1,2,3,4,5].map(m=>`<button class="${log.mood===m?'sel':''}" onclick="nightMood(${m},this)">${['😔','😕','😐','🙂','😊'][m-1]}</button>`).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">今日の優先アクション<span class="ln"></span></div>
+      <p class="muted" style="font-size:12px;margin-bottom:10px">前に進められましたか？</p>
+      <div class="row">
+        <button class="chip ${log.done===true?'sel':''}" style="text-align:center" onclick="nightDone(true,this)">✓ 進んだ</button>
+        <button class="chip ${log.done===false?'sel':''}" style="text-align:center" onclick="nightDone(false,this)">— 今日は休んだ</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">気づき・できたこと<span class="ln"></span></div>
+      <textarea class="inp" id="night-note" placeholder="小さなことでOK。今日できたことを1つ。">${log.note||''}</textarea>
+    </div>
+    <button class="btn" onclick="saveNight()">記録する</button>
+    <div class="card" style="margin-top:14px">
+      <div class="card-title">人生ログ<span class="ln"></span></div>
+      ${logList()}
+    </div>`;
+}
+let nm_mood=null,nm_done=null;
+function nightMood(m,el){nm_mood=m;document.querySelectorAll('#mood-night button').forEach(b=>b.classList.remove('sel'));el.classList.add('sel')}
+function nightDone(b,el){nm_done=b;el.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('sel'));el.classList.add('sel')}
+function saveNight(){
+  const k=todayKey();const prev=P.logs[k]||{};
+  P.logs[k]={
+    mood:nm_mood!=null?nm_mood:(prev.mood||3),
+    done:nm_done!=null?nm_done:(prev.done||false),
+    note:document.getElementById('night-note').value.trim()
+  };
+  save();toast('今日の記録を保存しました');renderNight();
+}
+function logList(){
+  const keys=Object.keys(P.logs||{}).sort().reverse().slice(0,7);
+  if(!keys.length)return '<p class="muted" style="font-size:12px">まだ記録がありません。</p>';
+  return keys.map(k=>{const l=P.logs[k];const [y,m,d]=k.split('-');
+    return `<div class="action-item"><div class="no serif">${['😔','😕','😐','🙂','😊'][(l.mood||3)-1]}</div>
+      <div class="bd"><b>${+m}月${+d}日</b><span>${l.note||(l.done?'前に進んだ':'休息した日')}</span></div>
+      <div class="tm">${l.done?'✓':''}</div></div>`}).join('');
+}
+
+/* =====================================================================
+   PLANS & SETTINGS (sheets)
+   ===================================================================== */
+function openPlans(msg){
+  const plans=[
+    {k:'free',n:'無料',p:'¥0',f:['今日のメッセージ','基本の性格診断','AIコーチ（1日3回）'],hot:false},
+    {k:'light',n:'ライト',p:'¥980',f:['年運・相性・手相','全診断レポート','AI相談（1日20回）'],hot:false},
+    {k:'standard',n:'スタンダード',p:'¥1,980',f:['AI人生コーチ無制限','人生グラフ・生活データ連携','週次レポート'],hot:true},
+    {k:'pro',n:'プロ',p:'¥2,980',f:['目標管理・行動分析','キャリア伴走','自治体・地域コミュニティ連携'],hot:false}
+  ];
+  openSheet(`<h2 class="serif">プラン</h2><div class="sub">${msg||'あなたの伴走レベルを選ぶ'}</div>
+    ${plans.map(pl=>`<div class="plan ${pl.hot?'hot':''}">${pl.hot?'<div class="tag">人気</div>':''}
+      <h3 class="serif">${pl.n}</h3><div class="price">${pl.p}<small>/月</small></div>
+      <ul>${pl.f.map(f=>`<li>${f}</li>`).join('')}</ul>
+      <button class="btn ${pl.k===P.plan?'ghost':''}" style="margin-top:12px" onclick="setPlan('${pl.k}')">${pl.k===P.plan?'利用中':'選択する'}</button>
+    </div>`).join('')}
+    <p class="muted" style="font-size:10.5px;text-align:center">※デモのため決済は発生しません</p>`);
+}
+function setPlan(k){P.plan=k;save();closeSheet();toast(({free:'無料',light:'ライト',standard:'スタンダード',pro:'プロ'})[k]+'プランに設定しました');if(!document.getElementById('view-report').classList.contains('hidden'))renderReport()}
+
+function openSettings(){
+  const a=buildAstro(P);
+  openSheet(`<h2 class="serif">設定</h2><div class="sub">${P.name} さん</div>
+    <div class="card"><div class="card-title">プロフィール<span class="ln"></span></div>
+      <p class="muted" style="font-size:13px">${P.bdate} ${P.btime||''} ／ ${P.bplace}<br>太陽 ${a.sun.n}・月 ${a.moon.n}・ASC ${a.asc.n}</p>
+      <p class="muted" style="font-size:12px;margin-top:6px">価値観：${(P.values||[]).join('・')||'—'}</p>
+    </div>
+    <div class="card"><div class="card-title">プラン<span class="ln"></span></div>
+      <p style="font-size:14px">現在：<b style="color:var(--gold-l)">${({free:'無料',light:'ライト',standard:'スタンダード',pro:'プロ'})[P.plan]}</b></p>
+      <button class="btn ghost" style="margin-top:10px" onclick="openPlans()">プランを見る・変更</button>
+    </div>
+    <div class="card"><div class="card-title">AIコーチ接続（任意）<span class="ln"></span></div>
+      <p class="muted" style="font-size:12px;margin-bottom:10px">Anthropic APIキーを設定すると、ローカル生成の代わりに Claude が応答します。キーはこの端末にのみ保存され、ブラウザから直接呼び出すデモ仕様です。</p>
+      <div class="field"><label>モデル</label>
+        <select class="inp" id="set-model">
+          <option value="claude-sonnet-4-6" ${P.model==='claude-sonnet-4-6'?'selected':''}>claude-sonnet-4-6（推奨・低コスト）</option>
+          <option value="claude-opus-4-8" ${P.model==='claude-opus-4-8'?'selected':''}>claude-opus-4-8（最高性能）</option>
+          <option value="claude-haiku-4-5-20251001" ${P.model==='claude-haiku-4-5-20251001'?'selected':''}>claude-haiku-4-5（最速）</option>
+        </select></div>
+      <div class="field"><label>API Key</label><input class="inp" id="set-key" type="password" placeholder="sk-ant-..." value="${P.apiKey||''}"></div>
+      <button class="btn" onclick="saveSettings()">保存</button>
+    </div>
+    <button class="btn ghost" onclick="resetAll()" style="border-color:var(--red);color:var(--red)">データを消去してやり直す</button>`);
+}
+function saveSettings(){P.apiKey=document.getElementById('set-key').value.trim();P.model=document.getElementById('set-model').value;save();closeSheet();toast(P.apiKey?'Claude に接続しました':'設定を保存しました')}
+function resetAll(){if(confirm('すべてのデータを消去して最初からやり直しますか？')){localStorage.removeItem(LS);location.reload()}}
+
+/* ---------- sheet ---------- */
+function openSheet(html){document.getElementById('sheet-body').innerHTML=html;document.getElementById('sheet-bg').classList.add('on')}
+function closeSheet(){document.getElementById('sheet-bg').classList.remove('on')}
+
+/* =====================================================================
+   BOOT
+   ===================================================================== */
+(function boot(){
+  if(P&&P.bdate){
+    document.getElementById('onboard').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    P.logs=P.logs||{};P.chat=P.chat||[];
+    go('today');
+  }else{
+    ob.init();
+  }
+})();
+</script>
+</body>
+</html>
