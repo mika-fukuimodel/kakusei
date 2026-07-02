@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REVERA — 入力</title>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700;800&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #10131a;
+  --accent: #8fa8c8;
+  --accent-light: #b3c7e0;
+  --paper: #eef1f6;
+  --muted: #6e7686;
+  --line: #aab4c4;
+  --red: #8b2020;
+  --success: #2c5f2e;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: 'Noto Sans JP', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ヘッダー */
+.app-header {
+  background: rgba(0,0,0,0.4);
+  border-bottom: 1px solid rgba(170,180,196,0.1);
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}
+
+.app-header h1 {
+  font-family: 'Shippori Mincho', serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+}
+
+.app-header .sub {
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  color: var(--muted);
+}
+
+/* コンテンツ */
+.app-content {
+  flex: 1;
+  padding: 40px 32px 64px;
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.screen-title {
+  text-align: center;
+  margin-bottom: 40px;
+  animation: fadeIn 0.8s ease;
+}
+
+.screen-title h2 {
+  font-family: 'Shippori Mincho', serif;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: 0.25em;
+  color: var(--accent);
+}
+
+.screen-title .divider {
+  width: 40px;
+  height: 1px;
+  background: var(--accent);
+  margin: 16px auto;
+  opacity: 0.4;
+}
+
+.screen-title p {
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+}
+
+/* フォーム */
+.revera-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(170,180,196,0.15);
+  border-radius: 6px;
+  padding: 28px;
+  animation: slideUp 0.6s ease both;
+}
+
+.form-card:nth-child(2) { animation-delay: 0.08s; }
+.form-card:nth-child(3) { animation-delay: 0.16s; }
+.form-card:nth-child(4) { animation-delay: 0.24s; }
+.form-card:nth-child(5) { animation-delay: 0.32s; }
+
+.form-label {
+  font-size: 9px;
+  letter-spacing: 0.5em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.form-question {
+  font-family: 'Shippori Mincho', serif;
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  line-height: 1.7;
+  color: var(--paper);
+  margin-bottom: 16px;
+}
+
+.text-input, .free-input {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(170,180,196,0.2);
+  border-radius: 3px;
+  padding: 14px 16px;
+  color: var(--paper);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  width: 100%;
+  transition: border-color 0.2s;
+}
+
+.free-input {
+  resize: none;
+  min-height: 90px;
+  font-size: 13px;
+}
+
+.text-input:focus, .free-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.text-input::placeholder, .free-input::placeholder { color: var(--muted); font-size: 12px; }
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.option-btn {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(170,180,196,0.2);
+  border-radius: 3px;
+  padding: 12px 16px;
+  color: rgba(238,241,246,0.7);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+}
+
+.option-btn:hover, .option-btn.selected {
+  border-color: var(--accent);
+  color: var(--accent-light);
+  background: rgba(143,168,200,0.08);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag {
+  padding: 6px 14px;
+  border: 1px solid rgba(170,180,196,0.2);
+  border-radius: 2px;
+  font-size: 11px;
+  color: rgba(238,241,246,0.6);
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.05em;
+}
+
+.tag.selected {
+  border-color: var(--accent);
+  color: var(--accent-light);
+  background: rgba(143,168,200,0.08);
+}
+
+.submit-btn {
+  width: 100%;
+  background: var(--accent);
+  color: var(--ink);
+  border: none;
+  border-radius: 4px;
+  padding: 18px;
+  font-family: 'Shippori Mincho', serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+
+.submit-btn:hover { background: var(--accent-light); }
+.submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.form-msg {
+  text-align: center;
+  font-size: 12px;
+  min-height: 18px;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+/* 完了画面 */
+.success-msg {
+  text-align: center;
+  padding: 48px 24px;
+  animation: fadeIn 0.5s ease;
+}
+
+.success-msg .check {
+  font-size: 48px;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+.success-msg h3 {
+  font-family: 'Shippori Mincho', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 8px;
+  letter-spacing: 0.1em;
+}
+
+.success-msg p {
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  line-height: 1.8;
+  margin-bottom: 24px;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 600px) {
+  .app-content { padding: 24px 16px 48px; }
+  .app-header { padding: 12px 16px; }
+  .form-card { padding: 20px; }
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>REVERA</h1>
+  <span class="sub">INPUT</span>
+</header>
+
+<div class="app-content">
+
+  <div class="screen-title">
+    <h2>入　力</h2>
+    <div class="divider"></div>
+    <p>今日の記録を残してください</p>
+  </div>
+
+  <div id="form-area">
+    <div class="revera-form">
+
+      <div class="form-card">
+        <div class="form-label">Profile</div>
+        <div class="form-question">お名前またはコード</div>
+        <input type="text" class="text-input" id="rv-name" placeholder="例：山田花子 / R001" />
+      </div>
+
+      <div class="form-card">
+        <div class="form-label">Q1 — 今の状態</div>
+        <div class="form-question">今のあなたの状態に一番近いものはどれですか？</div>
+        <div class="options" id="rv-state-options">
+          <button class="option-btn" onclick="selectOption(this, 'state', 1)">① とても良い</button>
+          <button class="option-btn" onclick="selectOption(this, 'state', 2)">② まあまあ</button>
+          <button class="option-btn" onclick="selectOption(this, 'state', 3)">③ 少し疲れている</button>
+          <button class="option-btn" onclick="selectOption(this, 'state', 4)">④ つらい</button>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-label">Q2 — 今日の記録</div>
+        <div class="form-question">今日、感じたこと・気づいたことを書いてください。</div>
+        <textarea class="free-input" id="rv-note" placeholder="ひとことでいい"></textarea>
+      </div>
+
+      <div class="form-card">
+        <div class="form-label">Q3 — 気持ちタグ</div>
+        <div class="form-question">今の気持ちに近いものを選んでください（複数選択可）</div>
+        <div class="tags" id="rv-tags">
+          <div class="tag" onclick="toggleTag(this)">安心</div>
+          <div class="tag" onclick="toggleTag(this)">不安</div>
+          <div class="tag" onclick="toggleTag(this)">期待</div>
+          <div class="tag" onclick="toggleTag(this)">疲れ</div>
+          <div class="tag" onclick="toggleTag(this)">感謝</div>
+          <div class="tag" onclick="toggleTag(this)">迷い</div>
+          <div class="tag" onclick="toggleTag(this)">決意</div>
+          <div class="tag" onclick="toggleTag(this)">解放</div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-label">Q4 — 身体の状態</div>
+        <div class="form-question">今の体の状態をひとことで教えてください。</div>
+        <textarea class="free-input" id="rv-body" placeholder="例：肩が重い、よく眠れた など"></textarea>
+      </div>
+
+      <button class="submit-btn" onclick="submitRecord()">記録する</button>
+      <div class="form-msg" id="rv-msg"></div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+const selectedValues = {};
+
+function selectOption(btn, key, val) {
+  btn.closest('.options').querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedValues[key] = val;
+}
+
+function toggleTag(el) { el.classList.toggle('selected'); }
+
+function submitRecord() {
+  const msg = document.getElementById('rv-msg');
+  const name = document.getElementById('rv-name').value.trim();
+
+  if (!name) {
+    msg.textContent = 'お名前またはコードを入力してください';
+    msg.style.color = 'var(--red)';
+    return;
+  }
+  if (!selectedValues['state']) {
+    msg.textContent = '今の状態を選んでください';
+    msg.style.color = 'var(--red)';
+    return;
+  }
+
+  const record = {
+    name,
+    state: selectedValues['state'],
+    note: document.getElementById('rv-note').value || null,
+    tags: [...document.querySelectorAll('#rv-tags .tag.selected')].map(t => t.textContent),
+    body: document.getElementById('rv-body').value || null,
+    recorded_at: new Date().toISOString(),
+  };
+
+  // 現時点では保存先未接続のため、ブラウザのローカルストレージに蓄積する
+  const records = JSON.parse(localStorage.getItem('revera_records') || '[]');
+  records.push(record);
+  localStorage.setItem('revera_records', JSON.stringify(records));
+
+  document.getElementById('form-area').innerHTML = `
+    <div class="success-msg">
+      <div class="check">✦</div>
+      <h3>記録しました</h3>
+      <p>あなたの記録を受け取りました。</p>
+      <button class="submit-btn" onclick="location.reload()" style="max-width:240px;margin:0 auto;">もう一度記録する</button>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>
