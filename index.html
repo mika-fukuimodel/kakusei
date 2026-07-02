@@ -510,6 +510,68 @@ body {
   margin-right: 6px;
 }
 
+/* 成長フェーズ定義パネル */
+.stage-guide {
+  margin-bottom: 28px;
+  border: 1px solid rgba(184,134,11,0.25);
+  border-radius: 4px;
+  background: rgba(184,134,11,0.05);
+}
+
+.stage-guide summary {
+  cursor: pointer;
+  padding: 14px 18px;
+  font-family: 'Shippori Mincho', serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+}
+
+.stage-guide summary::-webkit-details-marker { display: none; }
+.stage-guide summary::after { content: '＋'; font-size: 14px; }
+.stage-guide[open] summary::after { content: '－'; }
+
+.stage-guide .guide-body { padding: 0 18px 16px; }
+
+.guide-row {
+  display: flex;
+  gap: 14px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(200,191,170,0.1);
+}
+
+.guide-stage {
+  font-family: 'Shippori Mincho', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold);
+  min-width: 1.2em;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.guide-text .guide-name {
+  font-family: 'Shippori Mincho', serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--paper);
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.guide-text .guide-def {
+  font-size: 12px;
+  color: rgba(245,240,232,0.65);
+  line-height: 1.8;
+  letter-spacing: 0.03em;
+}
+
 /* 成功メッセージ */
 .success-msg {
   text-align: center;
@@ -646,6 +708,7 @@ body {
 
     <!-- 支援者画面 -->
     <div id="supporter-view">
+      <div class="stage-guide-slot"></div>
       <div class="section-title">観察を記録する</div>
       <div class="supporter-form">
 
@@ -749,6 +812,7 @@ body {
 
     <!-- ディレクター画面 -->
     <div id="director-view">
+      <div class="stage-guide-slot"></div>
       <div class="director-tabs">
         <div class="dir-tab active" onclick="switchTab('overview')">概要</div>
         <div class="dir-tab" onclick="switchTab('participants')">参加者</div>
@@ -1024,6 +1088,39 @@ function handleLogout() {
 // ========== 参加者フォーム ==========
 const stageNames = ['', '封鎖状態', '信頼の構築', '潜在意識の顕在化', '主体の回復', '小さな挑戦', '障害の突破', '場の創造と還元'];
 const stageKanji = ['', '一', '二', '三', '四', '五', '六', '七'];
+
+// 成長フェーズの定義（支援者・ディレクター画面の参照用）
+const stageDefinitions = [
+  { num: '一', name: '封鎖状態', def: '動けない、動き方がわからない状態。心が閉じており、行動のエネルギーが封じられている段階。' },
+  { num: '二', name: '信頼の構築', def: '安心して話せる関係が生まれはじめる段階。この場で正直に話せることが変化のサイン。' },
+  { num: '三', name: '潜在意識の顕在化', def: '自分でも気づいていなかった気持ちや考えが、言葉になって表に出てくる段階。' },
+  { num: '四', name: '主体の回復', def: '「自分で決めた」という感覚を取り戻す段階。他者に委ねず、自分の意志で選択できるようになる。' },
+  { num: '五', name: '小さな挑戦', def: '今までやったことのない新しい行動を起こしはじめる段階。結果よりも動いたこと自体が重要。' },
+  { num: '六', name: '障害の突破', def: '挑戦に伴うつらさや壁に直面し、それを受け止めて乗り越えていく段階。' },
+  { num: '七', name: '場の創造と還元', def: '自分の経験を他者や場に還元し、誰かの機会を作る側に回る段階。' },
+];
+
+function renderStageGuide() {
+  const html = `
+    <details class="stage-guide">
+      <summary>成長フェーズの定義（ステージ一〜七）</summary>
+      <div class="guide-body">
+        ${stageDefinitions.map(s => `
+          <div class="guide-row">
+            <div class="guide-stage">${s.num}</div>
+            <div class="guide-text">
+              <div class="guide-name">${s.name}</div>
+              <div class="guide-def">${s.def}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </details>
+  `;
+  document.querySelectorAll('.stage-guide-slot').forEach(el => el.innerHTML = html);
+}
+
+renderStageGuide();
 
 function renderParticipantForm() {
   const stage = currentParticipant.current_stage;
