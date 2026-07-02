@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>覚醒モデル</title>
+<title>REVERA01</title>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700;800&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -55,9 +55,9 @@ body {
 
 .login-header h1 {
   font-family: 'Shippori Mincho', serif;
-  font-size: 48px;
+  font-size: 38px;
   font-weight: 800;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.15em;
   color: var(--gold);
   margin-bottom: 8px;
 }
@@ -590,7 +590,7 @@ body {
 <!-- ログイン画面 -->
 <div id="login-screen">
   <div class="login-header">
-    <h1>覚　醒</h1>
+    <h1>REVERA01</h1>
     <div class="login-divider"></div>
     <p>TRANSFORMATION OS</p>
   </div>
@@ -632,7 +632,7 @@ body {
 <!-- メイン画面 -->
 <div id="main-screen">
   <header class="app-header">
-    <h1>覚　醒</h1>
+    <h1>REVERA01</h1>
     <span class="role-badge" id="role-label"></span>
     <button class="logout-btn" onclick="handleLogout()">退出</button>
   </header>
@@ -1052,7 +1052,7 @@ function getQuestionsHTML(stage) {
     const q1Labels = ['', '今、あなたはどんな状態ですか？', 'この場で、正直に話せましたか？', '今日、自分でも気づいていなかった気持ちや考えが出てきましたか？', '最近、自分で決めたと感じた場面はありましたか？'];
     const q1Options = [
       [],
-      ['① 動きたい', '② 動けない', '③ 動き方がわからない'],
+      ['① 動きたい', '② 動けない', '③ 動き方がわからない', '④ 動けた実感がある'],
       ['① 全部話せた', '② 少し話せた', '③ まだ話せていないことがある'],
       ['① はい', '② 少し', '③ いいえ'],
       ['① はい', '② 少し', '③ いいえ'],
@@ -1285,9 +1285,9 @@ async function submitEvent() {
     <div class="success-msg">
       <div class="check">✦</div>
       <h3>記録しました</h3>
-      <p>${currentParticipant.id ? 'あなたの記録が、覚醒モデルのデータになりました。' : 'テストコードのため、記録は保存されていません。'}</p>
+      <p>${currentParticipant.id ? 'あなたの記録が、REVERA01のデータになりました。' : 'テストコードのため、記録は保存されていません。'}</p>
       <div class="ai-feedback">
-        <div class="ai-label">KAKUSEI AGENT</div>
+        <div class="ai-label">REVERA AGENT</div>
         <p>${feedback}</p>
       </div>
       <button class="submit-btn" onclick="renderParticipantForm()" style="max-width:240px;margin:0 auto;">もう一度記録する</button>
@@ -1298,7 +1298,7 @@ async function submitEvent() {
 function generateFeedback(stage, vals, payload) {
   const q1 = vals['q1'];
   const stageTexts = {
-    1: q1 === 1 ? '動きたいという気持ちがある。それだけで十分です。その気持ちの先に、何がありますか？' : q1 === 2 ? 'そのままでいいです。動けないと感じている時、あなたの心の中に何がありますか？' : '動き方がわからない。それは正直な状態です。まず、何が一番気になっていますか？',
+    1: q1 === 1 ? '動きたいという気持ちがある。それだけで十分です。その気持ちの先に、何がありますか？' : q1 === 2 ? 'そのままでいいです。動けないと感じている時、あなたの心の中に何がありますか？' : q1 === 4 ? '動けた実感がある。その感覚こそが、次の一歩の土台になります。何があなたを動かしましたか？' : '動き方がわからない。それは正直な状態です。まず、何が一番気になっていますか？',
     2: '話せた分だけ、あなたは前に進んでいます。',
     3: q1 === 3 ? '今日は言えなかった。それでいいです。その言えなかったことが、次の扉かもしれません。' : '何かに気づいた瞬間がある。それが覚醒の始まりです。',
     4: q1 === 3 ? 'まだ誰かに委ねたい気持ちがある。それを感じていること自体、自分を見ている証拠です。' : '自分で決めた場面があった。その感覚を覚えておいてください。',
