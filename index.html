@@ -954,6 +954,15 @@ async function handleLogin() {
     return;
   }
 
+  // テストコード：TEST または TEST1〜TEST7（数字＝ステージ）。DBに接続せず参加者画面を確認できる
+  const testMatch = code.toUpperCase().match(/^TEST([1-7])?$/);
+  if (testMatch) {
+    currentRole = 'participant';
+    currentParticipant = { id: null, code: 'TEST', nickname: 'テスト', current_stage: parseInt(testMatch[1] || '1', 10) };
+    showMain();
+    return;
+  }
+
   // 参加者コードで照合
   const { data, error } = await db.from('participants').select('*').eq('code', code.toUpperCase()).eq('is_active', true).single();
   if (data) {
@@ -1258,12 +1267,15 @@ async function submitEvent() {
     next_giving_text: document.getElementById('next-giving-text')?.value || null,
   };
 
-  const { error } = await db.from('events').insert(payload);
+  // テストコードでのログイン時は保存せずフィードバック表示のみ
+  if (currentParticipant.id) {
+    const { error } = await db.from('events').insert(payload);
 
-  if (error) {
-    msg.textContent = 'エラーが発生しました。もう一度お試しください。';
-    msg.style.color = 'var(--red)';
-    return;
+    if (error) {
+      msg.textContent = 'エラーが発生しました。もう一度お試しください。';
+      msg.style.color = 'var(--red)';
+      return;
+    }
   }
 
   // AIフィードバック生成
@@ -1273,7 +1285,7 @@ async function submitEvent() {
     <div class="success-msg">
       <div class="check">✦</div>
       <h3>記録しました</h3>
-      <p>あなたの記録が、覚醒モデルのデータになりました。</p>
+      <p>${currentParticipant.id ? 'あなたの記録が、覚醒モデルのデータになりました。' : 'テストコードのため、記録は保存されていません。'}</p>
       <div class="ai-feedback">
         <div class="ai-label">KAKUSEI AGENT</div>
         <p>${feedback}</p>
