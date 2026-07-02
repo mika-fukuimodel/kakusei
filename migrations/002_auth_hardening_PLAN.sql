@@ -1,0 +1,43 @@
+-- REVERA / kakusei  Auth本修正 002【設計・未適用】(2026-07-02)
+-- 位置づけ: PART C 受入条件に追加された「支援者/ディレクターの認証必須化＋参加者データ読み取りの
+--          ログインユーザー限定」の実装計画。これは認証基盤の大改修のため、track分岐(001)とは分離し、
+--          Supabaseの障害復旧後に独立ステップとして適用・検証する。★このファイルはまだ実行しない★
+--
+-- 現状の問題: アプリは全操作を匿名(publishable)キーで実行し、支援者/ディレクターの区別は
+--   クライアント側の固定コード(director2026 等)のみ。RLSは暫定でUPDATE/DELETEを塞いだが、
+--   参加者データの匿名SELECTは開いたまま（公開キーを知る誰でも読める）。
+--
+-- 到達目標:
+--   1. 支援者/ディレクターは Supabase Auth(メール+パスワード等)でログインする
+--   2. participants / observations / events / track_decisions の SELECT は
+--      「認証済みスタッフ(authenticated かつ staff)」のみに限定
+--   3. 参加者の自己登録(anonのINSERT)と、参加者本人が自分の記録だけ読む導線は維持
+--
+-- 実装ステップ(概要):
+--   (a) staff テーブルを作り、auth.users と紐付け、role('supporter'|'director') を保持
+--         create table public.staff (user_id uuid primary key references auth.users(id), role text check(role in ('supporter','director')));
+--   (b) is_staff() ヘルパ関数
+--         create function public.is_staff() returns boolean language sql stable as
+--           $$ select exists(select 1 from public.staff s where s.user_id = auth.uid()) $$;
+--   (c) 各テーブルのSELECTポリシーを anon 全許可から staff 限定へ差し替え:
+--         drop policy anon_select_participants on public.participants;
+--         create policy staff_select_participants on public.participants
+--           for select to authenticated using (public.is_staff());
+--       observations / events / track_decisions も同様。
+--   (d) 参加者の自己登録は anon INSERT を維持（participants/observations/events/programs）。
+--       ただし匿名SELECTを閉じると「コードでログイン」時の participants 参照ができなくなるため、
+--       ログイン照合は SECURITY DEFINER 関数(コード→本人1行のみ返す)経由に置き換える:
+--         create function public.login_by_code(p_code text) returns table(...) security definer ...
+--   (e) アプリ側(index.html)改修:
+--       - 支援者/ディレクターのログインを supabase.auth.signInWithPassword に置換
+--       - ダッシュボードの各fetchは認証済みセッションのJWTで実行
+--       - 参加者ログインは login_by_code RPC を呼ぶ
+--
+-- 受入条件(このステップ完了時):
+--   [ ] 未ログインの匿名キーで participants/observations を SELECT → 0件 or 403
+--   [ ] スタッフでログイン後は一覧が見える
+--   [ ] 参加者の新規登録(anon INSERT)は引き続き成功
+--   [ ] 参加者はコードで自分の情報にだけ到達できる(他人の行は見えない)
+--
+-- 注意: (c)を先に流すとログイン(participants照合)が壊れるため、(d)のRPC化とアプリ改修を
+--       セットで同時にデプロイすること。だから「track分岐(001)」とは別のPRで扱う。

@@ -683,6 +683,19 @@ body {
     <input type="text" class="login-input" id="reg-nickname" placeholder="ニックネーム" />
     <input type="email" class="login-input" id="reg-email" placeholder="メールアドレス" />
     <select class="login-input" id="reg-prefecture" style="cursor:pointer;"><option value="">都道府県</option><option>北海道</option><option>青森県</option><option>岩手県</option><option>宮城県</option><option>秋田県</option><option>山形県</option><option>福島県</option><option>茨城県</option><option>栃木県</option><option>群馬県</option><option>埼玉県</option><option>千葉県</option><option>東京都</option><option>神奈川県</option><option>新潟県</option><option>富山県</option><option>石川県</option><option>福井県</option><option>山梨県</option><option>長野県</option><option>岐阜県</option><option>静岡県</option><option>愛知県</option><option>三重県</option><option>滋賀県</option><option>京都府</option><option>大阪府</option><option>兵庫県</option><option>奈良県</option><option>和歌山県</option><option>鳥取県</option><option>島根県</option><option>岡山県</option><option>広島県</option><option>山口県</option><option>徳島県</option><option>香川県</option><option>愛媛県</option><option>高知県</option><option>福岡県</option><option>佐賀県</option><option>長崎県</option><option>熊本県</option><option>大分県</option><option>宮崎県</option><option>鹿児島県</option><option>沖縄県</option><option>海外</option></select>
+    <!-- 申告票（トラック分岐・後置き判定の1票目。任意・場は分けない） -->
+    <select class="login-input" id="reg-declared-q1" style="cursor:pointer;">
+      <option value="">あなたの事業・活動の相手は主にどこにいますか（任意）</option>
+      <option value="local">主に嶺南域内</option>
+      <option value="startup">域外・オンラインが中心</option>
+      <option value="unclear">まだ分からない</option>
+    </select>
+    <select class="login-input" id="reg-declared-q2" style="cursor:pointer;">
+      <option value="">外部資金（出資）による成長を考えていますか（任意）</option>
+      <option value="startup">はい</option>
+      <option value="local">いいえ</option>
+      <option value="neutral">わからない</option>
+    </select>
     <div class="login-error" id="reg-error"></div>
     <button class="login-btn" onclick="handleRegister()">登録して入る</button>
     <div style="text-align:center;margin-top:16px;">
@@ -783,6 +796,15 @@ body {
         </div>
 
         <div class="form-group">
+          <div class="form-label">この行動の向き（任意・未選択でOK）</div>
+          <select class="form-select" id="obs-orientation">
+            <option value="neutral">どちらでもない</option>
+            <option value="local">域内循環（地元商圏・既存顧客）</option>
+            <option value="startup">域外拡張（仮説検証・域外市場）</option>
+          </select>
+        </div>
+
+        <div class="form-group">
           <div class="form-label">変容のきっかけと判定するか</div>
           <div class="toggle-group">
             <button class="toggle-btn" id="transform-yes" onclick="selectToggle('transform','yes')">YES</button>
@@ -818,6 +840,7 @@ body {
         <div class="dir-tab" onclick="switchTab('participants')">参加者</div>
         <div class="dir-tab" onclick="switchTab('alerts')">アラート</div>
         <div class="dir-tab" onclick="switchTab('triggers')">変容トリガー</div>
+        <div class="dir-tab" onclick="switchTab('tracks')">トラック判定</div>
       </div>
 
       <div id="tab-overview">
@@ -826,6 +849,13 @@ body {
           <div class="stat-card"><div class="stat-num" id="stat-participants">-</div><div class="stat-label">参加者数</div></div>
           <div class="stat-card"><div class="stat-num" id="stat-events">-</div><div class="stat-label">記録数</div></div>
         </div>
+        <div class="section-title">トラック分布（事業の方向性）</div>
+        <div class="stats-grid" id="track-grid">
+          <div class="stat-card"><div class="stat-num" id="stat-track-local">-</div><div class="stat-label">ローカル志向</div></div>
+          <div class="stat-card"><div class="stat-num" id="stat-track-startup">-</div><div class="stat-label">スタートアップ志向</div></div>
+          <div class="stat-card"><div class="stat-num" id="stat-track-undecided">-</div><div class="stat-label">未判定</div></div>
+        </div>
+        <div id="transfer-rate-box" style="margin:8px 0 4px;padding:12px 14px;border:1px solid rgba(200,191,170,0.2);border-radius:4px;font-size:12px;color:var(--muted);">転線率: -</div>
         <div class="section-title">最近の記録</div>
         <table class="data-table">
           <thead><tr><th>参加者</th><th>ステージ</th><th>記録日時</th></tr></thead>
@@ -836,7 +866,7 @@ body {
       <div id="tab-participants" style="display:none;">
         <div class="section-title">参加者一覧</div>
         <table class="data-table">
-          <thead><tr><th>コード</th><th>ニックネーム</th><th>プログラム</th><th>現在のステージ</th><th>状態</th></tr></thead>
+          <thead><tr><th>コード</th><th>ニックネーム</th><th>トラック</th><th>現在のステージ</th><th>状態</th></tr></thead>
           <tbody id="participants-list"></tbody>
         </table>
       </div>
@@ -856,11 +886,21 @@ body {
           <tbody id="triggers-list"></tbody>
         </table>
       </div>
+
+      <div id="tab-tracks" style="display:none;">
+        <div class="section-title">トラック判定 要確認</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">申告票と行動票（支援者観察）の2票で後置き判定します。場は分けず、伴走の焦点だけが変わります。</div>
+        <table class="data-table">
+          <thead><tr><th>コード</th><th>申告</th><th>行動</th><th>判定</th><th>確定</th></tr></thead>
+          <tbody id="tracks-list"></tbody>
+        </table>
+      </div>
     </div>
 
   </div>
 </div>
 
+<script src="track-logic.js"></script>
 <script>
 const SUPABASE_URL = 'https://dteuzcpgjoluehfzbobn.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_v8VIXxgZIhwF3C6DxWOFgw_slxtWIEc';
@@ -963,6 +1003,8 @@ async function createParticipant(programId, code, nickname, email, role) {
     nickname,
     supporter_note: email,
     prefecture: (document.getElementById("reg-prefecture") || {}).value || null,
+    declared_q1: (document.getElementById("reg-declared-q1") || {}).value || null,
+    declared_q2: (document.getElementById("reg-declared-q2") || {}).value || null,
     joined_at: new Date().toISOString().split('T')[0],
     current_stage: 1,
     is_active: true
@@ -1435,6 +1477,7 @@ async function submitObservation() {
     action_text: document.getElementById('obs-action-text')?.value || null,
     emotion_tags: selectedEmotions.length > 0 ? selectedEmotions : null,
     transform_flag: transformSelected === 'yes',
+    orientation_tag: document.getElementById('obs-orientation')?.value || 'neutral',
     alert_needed: alertNeeded,
     alert_reason: alertNeeded ? document.getElementById('obs-alert-reason').value : null,
     note: document.getElementById('obs-note').value || null,
@@ -1458,6 +1501,7 @@ async function submitObservation() {
     document.getElementById('obs-response').value = '';
     document.getElementById('obs-stage-before').value = '';
     document.getElementById('obs-stage-after').value = '';
+    if (document.getElementById('obs-orientation')) document.getElementById('obs-orientation').value = 'neutral';
     document.getElementById('obs-note').value = '';
     document.querySelectorAll('.emotion-tag').forEach(t => t.classList.remove('selected'));
     document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('selected'));
@@ -1478,16 +1522,26 @@ async function loadDirectorData() {
     { data: recentEvents },
     { data: participants },
     { data: alerts },
-    { data: triggers }
+    { data: triggers },
+    { data: orientationObs },
+    { data: trackDecisions }
   ] = await Promise.all([
     db.from('programs').select('*', { count: 'exact', head: true }),
     db.from('participants').select('*', { count: 'exact', head: true }),
     db.from('events').select('*', { count: 'exact', head: true }),
     db.from('events').select('id, stage, recorded_at, participant_id').order('recorded_at', { ascending: false }).limit(10),
-    db.from('participants').select('code, nickname, current_stage, is_active, program_id').order('created_at', { ascending: false }),
+    db.from('participants').select('id, code, nickname, current_stage, is_active, program_id, joined_at, declared_q1, declared_q2, track').order('created_at', { ascending: false }),
     db.from('observations').select('*').eq('alert_needed', true).order('observed_at', { ascending: false }),
     db.from('observations').select('*').eq('transform_flag', true).order('observed_at', { ascending: false }).limit(20),
+    db.from('observations').select('participant_id, orientation_tag, observed_at'),
+    db.from('track_decisions').select('*'),
   ]);
+
+  // ---- トラック判定の計算（C-4）----
+  const currentTracks = deriveCurrentTracks(trackDecisions);
+  const assessments = buildTrackAssessments(participants, orientationObs, currentTracks);
+  renderTrackSummary(participants, currentTracks, trackDecisions);
+  renderTrackDecisions(assessments);
 
   document.getElementById('stat-programs').textContent = programCount || 0;
   document.getElementById('stat-participants').textContent = participantCount || 0;
@@ -1514,7 +1568,7 @@ async function loadDirectorData() {
       <tr>
         <td>${p.code}</td>
         <td>${p.nickname || '-'}</td>
-        <td>-</td>
+        <td>${trackBadge(currentTracks[p.code] || 'undecided')}</td>
         <td><span class="stage-pill" style="background:rgba(184,134,11,0.1);color:var(--gold);">${stageKanji[p.current_stage]} ${stageNames[p.current_stage]}</span></td>
         <td style="color:${p.is_active ? 'var(--success)' : 'var(--muted)'};">${p.is_active ? '参加中' : '終了'}</td>
       </tr>
@@ -1554,15 +1608,148 @@ async function loadDirectorData() {
   }
 }
 
+// トラック分布＋転線率（概要タブ）
+function renderTrackSummary(participants, currentTracks, trackDecisions) {
+  let l = 0, s = 0, u = 0;
+  (participants || []).forEach(p => {
+    const t = currentTracks[p.code] || 'undecided';
+    if (t === 'local') l++; else if (t === 'startup') s++; else u++;
+  });
+  const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setTxt('stat-track-local', l);
+  setTxt('stat-track-startup', s);
+  setTxt('stat-track-undecided', u);
+
+  const tr = TrackLogic.transferRate(trackDecisions);
+  const box = document.getElementById('transfer-rate-box');
+  if (box) {
+    if (tr.band === 'n/a') {
+      box.innerHTML = '転線率: 判定履歴なし（4週経過後の判定が貯まると表示されます）';
+      box.style.borderColor = 'rgba(200,191,170,0.2)';
+    } else {
+      const color = tr.band === 'healthy' ? 'var(--success)' : (tr.band === 'watch' ? 'var(--gold)' : 'var(--red)');
+      box.innerHTML = `転線率: <b style="color:${color};">${(tr.rate*100).toFixed(0)}%</b>（${tr.transferred}/${tr.total}人）&nbsp;—&nbsp;${tr.note}`;
+      box.style.borderColor = color;
+    }
+  }
+}
+
+// トラック判定タブ（要確認キュー）
+function renderTrackDecisions(assessments) {
+  const tb = document.getElementById('tracks-list');
+  if (!tb) return;
+  const rows = (assessments || []).filter(a => a.needsAttention);
+  if (!rows.length) {
+    tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px;">要確認の判定はありません（4週未満・または判定と現在トラックが一致）</td></tr>';
+    return;
+  }
+  tb.innerHTML = rows.map(a => {
+    const c = a.p.code;
+    let action;
+    if (a.decision.agreed) {
+      // 申告と行動が一致 → 自動確定ボタン（人はワンクリックで承認）
+      action = `<button class="toggle-btn" onclick="confirmTrack('${c}','${a.current}','${a.decision.track}','auto_agreed','${a.declared}','${a.behavioral.vote}')">自動一致→確定</button>`;
+    } else {
+      // 不一致・保留 → 人が確定
+      action = `<button class="toggle-btn" onclick="confirmTrack('${c}','${a.current}','local','facilitator_decision','${a.declared}','${a.behavioral.vote}')">local</button>
+                <button class="toggle-btn" onclick="confirmTrack('${c}','${a.current}','startup','facilitator_decision','${a.declared}','${a.behavioral.vote}')">startup</button>`;
+    }
+    return `<tr>
+      <td>${c}</td>
+      <td>${TRACK_LABEL[a.declared] || a.declared}</td>
+      <td>${TRACK_LABEL[a.behavioral.vote] || a.behavioral.vote}（有効${a.behavioral.valid}）</td>
+      <td>${a.decision.reason}</td>
+      <td>${action}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* 行政向けKPI出力（C-4）: トラック別の「行動事実」のみ。
+ * orientation_tag の内訳・判定根拠（basis）は内部限定であり、ここには含めない。 */
+function getGovExport(participants, currentTracks, events) {
+  const byTrack = { local: {count:0, stages:{}}, startup: {count:0, stages:{}}, undecided: {count:0, stages:{}} };
+  (participants || []).forEach(p => {
+    const t = currentTracks[p.code] || 'undecided';
+    byTrack[t].count++;
+    const st = p.current_stage || 0;
+    byTrack[t].stages[st] = (byTrack[t].stages[st] || 0) + 1;
+  });
+  return {
+    generated_at: new Date().toISOString(),
+    note: '行政向け：トラック別の行動事実のみ。判定根拠・orientation内訳は内部限定のため非掲載。',
+    tracks: byTrack,
+    total_events: (events && events.length) || 0,
+  };
+}
+
 function switchTab(tab) {
+  const tabs = ['overview', 'participants', 'alerts', 'triggers', 'tracks'];
   document.querySelectorAll('.dir-tab').forEach((t, i) => {
-    const tabs = ['overview', 'participants', 'alerts', 'triggers'];
     t.classList.toggle('active', tabs[i] === tab);
   });
-  ['overview', 'participants', 'alerts', 'triggers'].forEach(t => {
+  tabs.forEach(t => {
     const el = document.getElementById(`tab-${t}`);
     if (el) el.style.display = t === tab ? 'block' : 'none';
   });
+}
+
+/* ===== トラック分岐（C-4）: 判定と表示 ===== */
+/* 現在トラックは track_decisions の最新 new_track から導出する（participants.track の
+ * 直接UPDATEはRLS暫定ロックダウンで匿名に許していないため。Auth本修正で認証ユーザー更新に置換予定）。 */
+function deriveCurrentTracks(decisions) {
+  const latest = {};
+  (decisions || []).forEach(d => {
+    const prev = latest[d.participant_code];
+    if (!prev || new Date(d.decided_at) > new Date(prev.decided_at)) latest[d.participant_code] = d;
+  });
+  const map = {};
+  Object.keys(latest).forEach(c => { map[c] = latest[c].new_track || 'undecided'; });
+  return map; // code -> 'local'|'startup'|'undecided'
+}
+
+const TRACK_LABEL = { local: 'ローカル', startup: 'スタートアップ', undecided: '未判定', unclear: '保留', neutral: '中立' };
+function trackBadge(track) {
+  const color = track === 'local' ? 'var(--gold)' : track === 'startup' ? '#7fa8d0' : 'var(--muted)';
+  return `<span class="stage-pill" style="background:rgba(184,134,11,0.08);color:${color};">${TRACK_LABEL[track] || track}</span>`;
+}
+
+// 参加者ごとの判定材料を組み立てる
+function buildTrackAssessments(participants, observations, currentTracks) {
+  const obsByPid = {};
+  (observations || []).forEach(o => {
+    (obsByPid[o.participant_id] = obsByPid[o.participant_id] || []).push(o);
+  });
+  const now = Date.now();
+  return (participants || []).map(p => {
+    const declared = TrackLogic.combineDeclared(p.declared_q1, p.declared_q2);
+    const list = (obsByPid[p.id] || [])
+      .sort((a, b) => new Date(b.observed_at) - new Date(a.observed_at))
+      .slice(0, 8)
+      .map(o => o.orientation_tag);
+    const behavioral = TrackLogic.tallyBehavioral(list);
+    const decision = TrackLogic.decideTrack(declared, behavioral);
+    const joinedMs = p.joined_at ? new Date(p.joined_at).getTime() : null;
+    const due = TrackLogic.isEvaluationDue(joinedMs, now);
+    const current = currentTracks[p.code] || 'undecided';
+    // 要確認: 評価期(4週)に達し、まだ現在トラックが判定結果と異なる or 未判定
+    const needsAttention = due && current !== (decision.agreed ? decision.track : current) ||
+                           (due && !decision.agreed && current === 'undecided');
+    return { p, declared, behavioral, decision, due, current, needsAttention };
+  });
+}
+
+// 判定を確定（track_decisions へ INSERT のみ。RLS暫定ロックダウンと整合）
+async function confirmTrack(code, previous, next, method, basisDeclared, basisBehavioral) {
+  const { error } = await db.from('track_decisions').insert({
+    participant_code: code,
+    previous_track: previous || 'undecided',
+    new_track: next,
+    basis_declared: (basisDeclared === 'local' || basisDeclared === 'startup') ? basisDeclared : (basisDeclared === 'unclear' ? 'unclear' : null),
+    basis_behavioral: basisBehavioral || 'neutral',
+    method: method,
+  });
+  if (error) { alert('確定に失敗しました: ' + error.message); return; }
+  loadDirectorData();
 }
 </script>
 </body>
