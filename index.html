@@ -4,27 +4,51 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REVERA01</title>
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700;800&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Shippori+Mincho:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
-  --ink: #1a1410;
-  --gold: #b8860b;
-  --gold-light: #d4a017;
-  --paper: #f5f0e8;
-  --muted: #7a6f5e;
-  --line: #c8bfaa;
-  --red: #8b2020;
+  /* ダークUIデザイントークン */
+  --bg-page: #0f1419;
+  --bg-panel: #141b2e;
+  --bg-panel-2: #111726;      /* 観察記録フォーム用・一段暗い */
+  --bg-input: #1a2135;
+  --border-soft: #2a3550;
+  --border-input: #35426a;
+  --text-main: #ffffff;
+  --text-sub: #8ea0c4;
+  --text-body: #c4d0e8;
+  --accent-grad: linear-gradient(135deg,#e8912f,#e85c8a); /* 唯一の暖色アクセント */
+
+  /* 七段階ステージ色スケール（藍→紫→ピンク→金） */
+  --stage-0: #2b3a63;
+  --stage-1: #3f4d86;
+  --stage-2: #5a5aa0;
+  --stage-3: #8a5aa0;
+  --stage-4: #c05a86;
+  --stage-5: #e07a55;
+  --stage-6: #e8a838;
+
+  /* 旧トークンをダーク配色に再マッピング（JS内インラインstyleの参照互換のため名称は維持） */
+  --ink: #0f1419;
+  --gold: #8ea0c4;            /* 旧アクセント参照 → 寒色サブ。暖色はボタン/選択チップのみに限定 */
+  --gold-light: #a9b8d6;
+  --paper: #ffffff;
+  --muted: #8ea0c4;
+  --line: #2a3550;
+  --red: #e0687a;
   --white: #ffffff;
-  --success: #2c5f2e;
+  --success: #4caf7d;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  background: var(--ink);
-  color: var(--paper);
-  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--bg-page);
+  color: var(--text-body);
+  font-family: system-ui, -apple-system, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif;
   min-height: 100vh;
 }
 
@@ -54,26 +78,26 @@ body {
 }
 
 .login-header h1 {
-  font-family: 'Shippori Mincho', serif;
-  font-size: 38px;
-  font-weight: 800;
-  letter-spacing: 0.15em;
-  color: var(--gold);
-  margin-bottom: 8px;
+  font-family: 'Audiowide', 'Shippori Mincho', sans-serif;
+  font-size: 40px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: var(--text-main);
+  margin-bottom: 10px;
 }
 
 .login-header p {
   font-size: 12px;
   letter-spacing: 0.3em;
-  color: var(--muted);
+  color: var(--text-sub);
 }
 
 .login-divider {
-  width: 40px;
-  height: 1px;
-  background: var(--gold);
+  width: 48px;
+  height: 2px;
+  background: var(--accent-grad);
+  border-radius: 2px;
   margin: 16px auto;
-  opacity: 0.4;
 }
 
 .login-form {
@@ -83,41 +107,42 @@ body {
 }
 
 .login-input {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(200,191,170,0.2);
-  border-radius: 4px;
-  padding: 16px 20px;
-  color: var(--paper);
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 14px;
-  letter-spacing: 0.05em;
+  background: var(--bg-input);
+  border: 0.5px solid var(--border-input);
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: var(--text-main);
+  font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.03em;
   width: 100%;
   transition: border-color 0.2s;
 }
 
 .login-input:focus {
   outline: none;
-  border-color: var(--gold);
+  border-color: #6b7db3;
 }
 
-.login-input::placeholder { color: var(--muted); }
+.login-input::placeholder { color: #5f6f92; }
+.login-input option { color: #1a1a1a; background: #fff; }
 
 .login-btn {
-  background: var(--gold);
-  color: var(--ink);
+  background: var(--accent-grad);
+  color: #fff;
   border: none;
-  border-radius: 4px;
-  padding: 16px;
-  font-family: 'Shippori Mincho', serif;
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 0.15em;
+  border-radius: 8px;
+  padding: 13px;
+  font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: filter 0.2s;
   margin-top: 8px;
 }
 
-.login-btn:hover { background: var(--gold-light); }
+.login-btn:hover { filter: brightness(1.12); }
 
 .login-error {
   text-align: center;
@@ -137,8 +162,8 @@ body {
 
 /* ヘッダー */
 .app-header {
-  background: rgba(0,0,0,0.4);
-  border-bottom: 1px solid rgba(200,191,170,0.1);
+  background: rgba(15,20,25,0.85);
+  border-bottom: 0.5px solid var(--border-soft);
   padding: 16px 32px;
   display: flex;
   align-items: center;
@@ -150,34 +175,34 @@ body {
 }
 
 .app-header h1 {
-  font-family: 'Shippori Mincho', serif;
+  font-family: 'Audiowide', 'Shippori Mincho', sans-serif;
   font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  color: var(--gold);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--text-main);
 }
 
 .role-badge {
   font-size: 10px;
   letter-spacing: 0.3em;
   padding: 4px 12px;
-  border: 1px solid rgba(184,134,11,0.4);
-  border-radius: 2px;
-  color: var(--gold);
+  border: 0.5px solid var(--border-input);
+  border-radius: 6px;
+  color: var(--text-sub);
 }
 
 .logout-btn {
-  background: none;
-  border: 1px solid rgba(200,191,170,0.2);
-  color: var(--muted);
+  background: transparent;
+  border: 0.5px solid var(--border-input);
+  color: var(--text-body);
   padding: 6px 14px;
-  border-radius: 2px;
+  border-radius: 8px;
   font-size: 11px;
   cursor: pointer;
   letter-spacing: 0.1em;
   transition: all 0.2s;
 }
-.logout-btn:hover { border-color: var(--gold); color: var(--gold); }
+.logout-btn:hover { border-color: #6b7db3; color: var(--text-main); }
 
 /* コンテンツ */
 .app-content {
@@ -200,23 +225,27 @@ body {
 .stage-indicator .stage-num {
   font-family: 'Shippori Mincho', serif;
   font-size: 64px;
-  font-weight: 800;
-  color: var(--gold);
+  font-weight: 700;
+  background: var(--accent-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
   line-height: 1;
 }
 
 .stage-indicator .stage-name {
   font-size: 14px;
   letter-spacing: 0.2em;
-  color: var(--muted);
+  color: var(--text-sub);
   margin-top: 8px;
 }
 
 .q-card {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(200,191,170,0.15);
-  border-radius: 6px;
-  padding: 28px;
+  background: var(--bg-panel);
+  border: 0.5px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 24px;
   margin-bottom: 20px;
   animation: slideUp 0.6s ease both;
 }
@@ -227,8 +256,8 @@ body {
 
 .q-label {
   font-size: 9px;
-  letter-spacing: 0.5em;
-  color: var(--gold);
+  letter-spacing: 0.4em;
+  color: var(--text-sub);
   text-transform: uppercase;
   margin-bottom: 12px;
 }
@@ -237,9 +266,9 @@ body {
   font-family: 'Shippori Mincho', serif;
   font-size: 17px;
   font-weight: 500;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
   line-height: 1.7;
-  color: var(--paper);
+  color: var(--text-main);
   margin-bottom: 16px;
 }
 
@@ -250,34 +279,35 @@ body {
 }
 
 .option-btn {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(200,191,170,0.2);
-  border-radius: 3px;
+  background: var(--bg-input);
+  border: 0.5px solid var(--border-input);
+  border-radius: 8px;
   padding: 12px 16px;
-  color: rgba(245,240,232,0.7);
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 13px;
-  letter-spacing: 0.05em;
+  color: var(--text-body);
+  font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.03em;
   cursor: pointer;
   text-align: left;
   transition: all 0.2s;
 }
 
-.option-btn:hover, .option-btn.selected {
-  border-color: var(--gold);
-  color: var(--gold);
-  background: rgba(184,134,11,0.08);
+.option-btn:hover { border-color: #6b7db3; }
+.option-btn.selected {
+  border: none;
+  color: #fff;
+  background: var(--accent-grad);
 }
 
 .free-input {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(200,191,170,0.2);
-  border-radius: 3px;
-  padding: 14px 16px;
-  color: var(--paper);
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 13px;
-  letter-spacing: 0.05em;
+  background: var(--bg-input);
+  border: 0.5px solid var(--border-input);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text-main);
+  font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.03em;
   width: 100%;
   resize: none;
   min-height: 80px;
@@ -286,28 +316,28 @@ body {
 
 .free-input:focus {
   outline: none;
-  border-color: var(--gold);
+  border-color: #6b7db3;
 }
 
-.free-input::placeholder { color: var(--muted); font-size: 12px; }
+.free-input::placeholder { color: #5f6f92; font-size: 13px; }
 
 .submit-btn {
   width: 100%;
-  background: var(--gold);
-  color: var(--ink);
+  background: var(--accent-grad);
+  color: #fff;
   border: none;
-  border-radius: 4px;
-  padding: 18px;
-  font-family: 'Shippori Mincho', serif;
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 0.15em;
+  border-radius: 8px;
+  padding: 14px;
+  font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: filter 0.2s;
   margin-top: 8px;
 }
 
-.submit-btn:hover { background: var(--gold-light); }
+.submit-btn:hover { filter: brightness(1.12); }
 .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .hidden { display: none !important; }
@@ -315,10 +345,15 @@ body {
 /* ========== 支援者画面 ========== */
 #supporter-view { display: none; }
 
+/* 観察記録フォームは誤選択防止のためコントラスト最優先（一段暗いパネル） */
 .supporter-form {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  background: var(--bg-panel-2);
+  border: 0.5px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 24px;
 }
 
 .form-group {
@@ -329,25 +364,26 @@ body {
 
 .form-label {
   font-size: 10px;
-  letter-spacing: 0.4em;
-  color: var(--gold);
+  letter-spacing: 0.35em;
+  color: var(--text-sub);
   text-transform: uppercase;
 }
 
 .form-select {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(200,191,170,0.2);
-  border-radius: 3px;
-  padding: 12px 16px;
-  color: var(--paper);
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 13px;
+  background: var(--bg-input);
+  border: 0.5px solid var(--border-input);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #fff;
+  font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
+  font-size: 14px;
   cursor: pointer;
   appearance: none;
 }
 
-.form-select:focus { outline: none; border-color: var(--gold); }
-.form-select option { background: var(--ink); }
+.form-select:focus { outline: none; border-color: #6b7db3; }
+/* OSによる白背景白文字化を防ぐため option は明示 */
+.form-select option { color: #1a1a1a; background: #fff; }
 
 .emotion-tags {
   display: flex;
@@ -356,20 +392,21 @@ body {
 }
 
 .emotion-tag {
-  padding: 6px 14px;
-  border: 1px solid rgba(200,191,170,0.2);
-  border-radius: 2px;
-  font-size: 11px;
-  color: rgba(245,240,232,0.6);
+  padding: 5px 12px;
+  border: 0.5px solid var(--border-input);
+  border-radius: 20px;
+  font-size: 12px;
+  background: var(--bg-input);
+  color: var(--text-body);
   cursor: pointer;
   transition: all 0.2s;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
 }
 
 .emotion-tag.selected {
-  border-color: var(--gold);
-  color: var(--gold);
-  background: rgba(184,134,11,0.08);
+  border: none;
+  color: #fff;
+  background: var(--accent-grad);
 }
 
 .toggle-group {
@@ -380,20 +417,20 @@ body {
 .toggle-btn {
   flex: 1;
   padding: 10px;
-  border: 1px solid rgba(200,191,170,0.2);
-  border-radius: 3px;
-  background: none;
-  color: rgba(245,240,232,0.6);
-  font-size: 13px;
+  border: 0.5px solid var(--border-input);
+  border-radius: 20px;
+  background: var(--bg-input);
+  color: var(--text-body);
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
 }
 
 .toggle-btn.selected {
-  border-color: var(--gold);
-  color: var(--gold);
-  background: rgba(184,134,11,0.08);
+  border: none;
+  color: #fff;
+  background: var(--accent-grad);
 }
 
 .alert-toggle {
@@ -401,14 +438,14 @@ body {
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
-  background: rgba(139,32,32,0.1);
-  border: 1px solid rgba(139,32,32,0.3);
-  border-radius: 3px;
+  background: rgba(224,104,122,0.1);
+  border: 0.5px solid rgba(224,104,122,0.4);
+  border-radius: 8px;
   cursor: pointer;
 }
 
 .alert-toggle input { cursor: pointer; accent-color: var(--red); }
-.alert-toggle label { font-size: 13px; color: rgba(245,240,232,0.7); cursor: pointer; letter-spacing: 0.05em; }
+.alert-toggle label { font-size: 14px; color: var(--text-body); cursor: pointer; letter-spacing: 0.03em; }
 
 /* ========== ディレクター画面 ========== */
 #director-view { display: none; }
@@ -417,14 +454,14 @@ body {
   display: flex;
   gap: 2px;
   margin-bottom: 32px;
-  border-bottom: 1px solid rgba(200,191,170,0.1);
+  border-bottom: 0.5px solid var(--border-soft);
 }
 
 .dir-tab {
   padding: 10px 20px;
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--text-sub);
   cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
@@ -432,8 +469,8 @@ body {
 }
 
 .dir-tab.active {
-  color: var(--gold);
-  border-bottom-color: var(--gold);
+  color: var(--text-main);
+  border-bottom-color: #e07a55;
 }
 
 .stats-grid {
@@ -444,9 +481,9 @@ body {
 }
 
 .stat-card {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(200,191,170,0.15);
-  border-radius: 4px;
+  background: var(--bg-panel);
+  border: 0.5px solid var(--border-soft);
+  border-radius: 12px;
   padding: 20px;
   text-align: center;
 }
@@ -455,51 +492,68 @@ body {
   font-family: 'Shippori Mincho', serif;
   font-size: 36px;
   font-weight: 700;
-  color: var(--gold);
+  color: var(--text-main);
 }
 
 .stat-label {
   font-size: 10px;
-  letter-spacing: 0.2em;
-  color: var(--muted);
+  letter-spacing: 0.15em;
+  color: var(--text-sub);
   margin-top: 4px;
 }
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
+  background: var(--bg-panel);
+  border: 0.5px solid var(--border-soft);
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .data-table th {
   font-size: 9px;
-  letter-spacing: 0.3em;
-  color: var(--gold);
+  letter-spacing: 0.25em;
+  color: var(--text-sub);
   text-transform: uppercase;
-  padding: 10px 12px;
+  padding: 12px;
   text-align: left;
-  border-bottom: 1px solid rgba(200,191,170,0.15);
+  background: rgba(255,255,255,0.06);
+  border-bottom: 0.5px solid var(--border-soft);
 }
 
 .data-table td {
   font-size: 12px;
-  color: rgba(245,240,232,0.7);
+  color: var(--text-body);
   padding: 12px;
-  border-bottom: 1px solid rgba(200,191,170,0.08);
+  background: rgba(255,255,255,0.02);
+  border-bottom: 0.5px solid var(--border-soft);
   letter-spacing: 0.03em;
 }
 
 .data-table tr:hover td {
-  background: rgba(255,255,255,0.02);
+  background: rgba(255,255,255,0.05);
 }
 
 .stage-pill {
   display: inline-block;
-  padding: 2px 10px;
-  border-radius: 2px;
+  padding: 3px 11px;
+  border-radius: 20px;
   font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
+  color: #fff;
+  background: var(--stage-2);
 }
+
+/* 七段階カラースケール（バッジ）— 定義パネルと同一スケール */
+.stage-pill.stage-c1 { background: var(--stage-0); color: #fff; }
+.stage-pill.stage-c2 { background: var(--stage-1); color: #fff; }
+.stage-pill.stage-c3 { background: var(--stage-2); color: #fff; }
+.stage-pill.stage-c4 { background: var(--stage-3); color: #fff; }
+.stage-pill.stage-c5 { background: var(--stage-4); color: #fff; }
+.stage-pill.stage-c6 { background: var(--stage-5); color: #1a1a1a; }
+.stage-pill.stage-c7 { background: var(--stage-6); color: #1a1a1a; }
 
 .alert-dot {
   display: inline-block;
@@ -513,19 +567,19 @@ body {
 /* 成長フェーズ定義パネル */
 .stage-guide {
   margin-bottom: 28px;
-  border: 1px solid rgba(184,134,11,0.25);
-  border-radius: 4px;
-  background: rgba(184,134,11,0.05);
+  border: 0.5px solid var(--border-soft);
+  border-radius: 12px;
+  background: var(--bg-panel);
 }
 
 .stage-guide summary {
   cursor: pointer;
-  padding: 14px 18px;
+  padding: 16px 18px;
   font-family: 'Shippori Mincho', serif;
   font-size: 14px;
   font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--gold);
+  letter-spacing: 0.08em;
+  color: var(--text-main);
   list-style: none;
   display: flex;
   align-items: center;
@@ -534,7 +588,7 @@ body {
 }
 
 .stage-guide summary::-webkit-details-marker { display: none; }
-.stage-guide summary::after { content: '＋'; font-size: 14px; }
+.stage-guide summary::after { content: '＋'; font-size: 14px; color: var(--text-sub); }
 .stage-guide[open] summary::after { content: '－'; }
 
 .stage-guide .guide-body { padding: 0 18px 16px; }
@@ -543,31 +597,39 @@ body {
   display: flex;
   gap: 14px;
   padding: 12px 0;
-  border-top: 1px solid rgba(200,191,170,0.1);
+  border-top: 0.5px solid var(--border-soft);
 }
 
 .guide-stage {
   font-family: 'Shippori Mincho', serif;
   font-size: 18px;
   font-weight: 700;
-  color: var(--gold);
-  min-width: 1.2em;
+  min-width: 1.4em;
   text-align: center;
   line-height: 1.5;
 }
+
+/* 七段階カラースケール（藍→紫→ピンク→金）を定義パネルの各行に適用 */
+.stage-guide .guide-body .guide-row:nth-child(1) .guide-stage { color: var(--stage-0); }
+.stage-guide .guide-body .guide-row:nth-child(2) .guide-stage { color: var(--stage-1); }
+.stage-guide .guide-body .guide-row:nth-child(3) .guide-stage { color: var(--stage-2); }
+.stage-guide .guide-body .guide-row:nth-child(4) .guide-stage { color: var(--stage-3); }
+.stage-guide .guide-body .guide-row:nth-child(5) .guide-stage { color: var(--stage-4); }
+.stage-guide .guide-body .guide-row:nth-child(6) .guide-stage { color: var(--stage-5); }
+.stage-guide .guide-body .guide-row:nth-child(7) .guide-stage { color: var(--stage-6); }
 
 .guide-text .guide-name {
   font-family: 'Shippori Mincho', serif;
   font-size: 13px;
   font-weight: 500;
-  color: var(--paper);
-  letter-spacing: 0.05em;
+  color: var(--text-main);
+  letter-spacing: 0.03em;
   margin-bottom: 4px;
 }
 
 .guide-text .guide-def {
   font-size: 12px;
-  color: rgba(245,240,232,0.65);
+  color: var(--text-body);
   line-height: 1.8;
   letter-spacing: 0.03em;
 }
@@ -581,7 +643,11 @@ body {
 
 .success-msg .check {
   font-size: 48px;
-  color: var(--gold);
+  background: var(--accent-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
   margin-bottom: 16px;
 }
 
@@ -589,23 +655,23 @@ body {
   font-family: 'Shippori Mincho', serif;
   font-size: 22px;
   font-weight: 700;
-  color: var(--gold);
+  color: var(--text-main);
   margin-bottom: 8px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
 }
 
 .success-msg p {
   font-size: 13px;
-  color: var(--muted);
-  letter-spacing: 0.05em;
+  color: var(--text-sub);
+  letter-spacing: 0.03em;
   line-height: 1.8;
   margin-bottom: 24px;
 }
 
 .ai-feedback {
-  background: rgba(184,134,11,0.08);
-  border: 1px solid rgba(184,134,11,0.2);
-  border-radius: 4px;
+  background: var(--bg-panel);
+  border: 0.5px solid var(--border-soft);
+  border-radius: 12px;
   padding: 20px 24px;
   margin-bottom: 24px;
   text-align: left;
@@ -613,16 +679,16 @@ body {
 
 .ai-feedback .ai-label {
   font-size: 9px;
-  letter-spacing: 0.4em;
-  color: var(--gold);
+  letter-spacing: 0.35em;
+  color: var(--text-sub);
   margin-bottom: 10px;
 }
 
 .ai-feedback p {
   font-size: 14px;
-  color: var(--paper);
+  color: var(--text-body);
   line-height: 1.9;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   margin-bottom: 0;
 }
 
@@ -630,11 +696,11 @@ body {
   font-family: 'Shippori Mincho', serif;
   font-size: 20px;
   font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--gold);
+  letter-spacing: 0.08em;
+  color: var(--text-main);
   margin-bottom: 24px;
   padding-bottom: 12px;
-  border-bottom: 1px solid rgba(200,191,170,0.1);
+  border-bottom: 0.5px solid var(--border-soft);
 }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -644,6 +710,7 @@ body {
   .app-content { padding: 24px 16px; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .app-header { padding: 12px 16px; }
+  .data-table th, .data-table td { padding: 10px 8px; }
 }
 </style>
 </head>
@@ -1499,7 +1566,7 @@ async function loadDirectorData() {
     recentTbody.innerHTML = recentEvents.map(e => `
       <tr>
         <td>${e.participant_id?.slice(0,8)}...</td>
-        <td><span class="stage-pill" style="background:rgba(184,134,11,0.15);color:var(--gold);">${stageKanji[e.stage]} ${stageNames[e.stage]}</span></td>
+        <td><span class="stage-pill stage-c${e.stage}">${stageKanji[e.stage]} ${stageNames[e.stage]}</span></td>
         <td>${new Date(e.recorded_at).toLocaleString('ja-JP', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
       </tr>
     `).join('');
@@ -1515,7 +1582,7 @@ async function loadDirectorData() {
         <td>${p.code}</td>
         <td>${p.nickname || '-'}</td>
         <td>-</td>
-        <td><span class="stage-pill" style="background:rgba(184,134,11,0.1);color:var(--gold);">${stageKanji[p.current_stage]} ${stageNames[p.current_stage]}</span></td>
+        <td><span class="stage-pill stage-c${p.current_stage}">${stageKanji[p.current_stage]} ${stageNames[p.current_stage]}</span></td>
         <td style="color:${p.is_active ? 'var(--success)' : 'var(--muted)'};">${p.is_active ? '参加中' : '終了'}</td>
       </tr>
     `).join('');
