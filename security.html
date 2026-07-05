@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>セキュリティポリシー — REVERA01</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Shippori+Mincho:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-page:#0f1419; --bg-panel:#141b2e; --bg-input:#1a2135;
+  --border-soft:#2a3550; --text-main:#ffffff; --text-sub:#8ea0c4; --text-body:#c4d0e8;
+  --accent-grad:linear-gradient(135deg,#e8912f,#e85c8a);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg-page);color:var(--text-body);font-family:system-ui,-apple-system,'Hiragino Sans','Hiragino Kaku Gothic ProN',sans-serif;line-height:1.9;min-height:100vh;}
+.wrap{max-width:760px;margin:0 auto;padding:48px 24px 80px;}
+.doc-head{text-align:center;margin-bottom:40px;}
+.doc-head .logo{font-family:'Audiowide','Shippori Mincho',sans-serif;font-size:26px;color:var(--text-main);letter-spacing:0.04em;}
+.doc-head .divider{width:48px;height:2px;background:var(--accent-grad);border-radius:2px;margin:14px auto;}
+.doc-head h1{font-family:'Shippori Mincho',serif;font-size:24px;font-weight:700;color:var(--text-main);letter-spacing:0.08em;}
+.doc-meta{font-size:12px;color:var(--text-sub);margin-top:10px;letter-spacing:0.05em;}
+.lead{background:var(--bg-panel);border:0.5px solid var(--border-soft);border-radius:12px;padding:20px 22px;margin-bottom:32px;font-size:14px;color:var(--text-body);}
+section{margin-bottom:28px;}
+h2{font-family:'Shippori Mincho',serif;font-size:17px;font-weight:700;color:var(--text-main);letter-spacing:0.05em;margin-bottom:12px;padding-bottom:8px;border-bottom:0.5px solid var(--border-soft);}
+h2 .no{color:#e07a55;margin-right:10px;}
+p{font-size:14px;margin-bottom:10px;}
+ul{list-style:none;margin:8px 0 10px;}
+li{font-size:14px;padding-left:18px;position:relative;margin-bottom:7px;}
+li::before{content:'';position:absolute;left:2px;top:11px;width:5px;height:5px;border-radius:50%;background:#5a5aa0;}
+table{width:100%;border-collapse:collapse;margin:12px 0;background:var(--bg-panel);border:0.5px solid var(--border-soft);border-radius:12px;overflow:hidden;}
+th,td{text-align:left;padding:11px 13px;font-size:13px;border-bottom:0.5px solid var(--border-soft);vertical-align:top;}
+th{background:rgba(255,255,255,0.06);color:var(--text-sub);width:34%;}
+td{color:var(--text-body);}
+.ph{color:#e8a838;font-weight:600;}
+.note{font-size:12px;color:var(--text-sub);}
+a{color:#e07a55;}
+.foot{margin-top:40px;text-align:center;font-size:12px;color:var(--text-sub);}
+.foot a{color:var(--text-sub);text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="doc-head">
+    <div class="logo">REVERA01</div>
+    <div class="divider"></div>
+    <h1>セキュリティポリシー</h1>
+    <div class="doc-meta">制定日：2026年7月5日 ／ 最終改定日：2026年7月5日</div>
+  </div>
+
+  <div class="lead">
+    <span class="ph">【事業者名】</span>（以下「当方」）は、人材育成・研究プログラム「REVERA01」（以下「本サービス」）が扱う情報、とりわけ利用者の心身の状態や感情に関する機微な記録を保護するため、本セキュリティポリシー（情報セキュリティ方針）を定め、継続的に運用・改善します。
+  </div>
+
+  <section>
+    <h2><span class="no">1</span>基本方針</h2>
+    <p>当方は、本サービスが扱う情報の機密性・完全性・可用性を確保することを情報セキュリティの基本方針とし、関係法令およびガイドラインを遵守します。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">2</span>適用範囲</h2>
+    <p>本ポリシーは、本サービスの運営に関与するすべての情報資産、システム、および取扱者に適用されます。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">3</span>データの最小化と仮名化</h2>
+    <ul>
+      <li>取得する情報は、利用目的の達成に必要な範囲に限定します。</li>
+      <li>参加者は氏名ではなく参加者コード（例：U001）で識別し、記録データを仮名化して取り扱います。</li>
+      <li>研究・分析に用いる場合は、個人を特定できない形に加工します。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">4</span>通信の暗号化</h2>
+    <p>本サービスと利用者の端末、および本サービスとデータベース間の通信は、TLS（HTTPS）により暗号化します。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">5</span>保管とアクセス制御</h2>
+    <ul>
+      <li>データは外部クラウドデータベース（Supabase）に保管し、委託先の安全管理措置を確認のうえ利用します。</li>
+      <li>画面・機能は役割（参加者／支援者／ディレクター）に応じて分離し、各利用者は必要な範囲の情報にのみアクセスできます。</li>
+      <li>運営用の権限は、必要最小限の担当者に限定して付与します。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">6</span>外部委託先の管理</h2>
+    <p>データの保存・処理を外部サービスに委託する場合は、当該委託先が十分な安全管理体制を有していることを確認し、適切に監督します。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">7</span>保管期間と削除</h2>
+    <p>情報は利用目的の達成に必要な期間のみ保管し、不要となった情報および削除請求のあった情報は、適切な方法で速やかに削除します。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">8</span>インシデント対応</h2>
+    <p>情報漏えい等のセキュリティ事案が発生した場合、または発生のおそれを認識した場合は、速やかに影響範囲を確認し、被害の拡大防止・原因調査・再発防止に努めます。必要に応じて、関係する利用者および監督機関へ報告・通知します。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">9</span>利用者の責務</h2>
+    <ul>
+      <li>参加者コードやログイン用コードは第三者に知られないよう適切に管理してください。</li>
+      <li>コードの漏えいや不正利用のおそれがある場合は、速やかに下記連絡先までご連絡ください。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">10</span>見直し</h2>
+    <p>当方は、本ポリシーおよびセキュリティ対策の有効性を定期的に評価し、必要に応じて見直しを行います。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">11</span>お問い合わせ先</h2>
+    <table>
+      <tr><th>事業者名</th><td><span class="ph">【事業者名】</span></td></tr>
+      <tr><th>連絡先</th><td><span class="ph">【連絡先メールアドレス】</span></td></tr>
+    </table>
+  </section>
+
+  <div class="foot">
+    <a href="index.html">← REVERA01 に戻る</a> ／ <a href="privacy.html">プライバシーポリシー</a>
+  </div>
+</div>
+</body>
+</html>
