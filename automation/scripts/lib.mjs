@@ -37,6 +37,16 @@ export function cardPath(id) {
   return join(CARDS_DIR, `${id}.png`);
 }
 
+// スライド(カルーセル)1枚ごとの画像パス。例: 001-trust-ai-01.png
+export function slidePath(id, index) {
+  return join(CARDS_DIR, `${id}-${String(index + 1).padStart(2, "0")}.png`);
+}
+
+// 投稿に含まれるスライド枚数（slidesがあればその数、なければ1）
+export function slideCount(post) {
+  return Array.isArray(post.slides) ? post.slides.length : 1;
+}
+
 // Instagram用の公開画像URL（GitHub Actions上ではraw.githubusercontent.comを使う）
 export function rawImageUrl(id) {
   const repo = process.env.GITHUB_REPOSITORY; // 例: mika-fukuimodel/kakusei

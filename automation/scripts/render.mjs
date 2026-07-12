@@ -2,13 +2,68 @@
 // Playwright(Chromium)でHTMLをスクリーンショットして高品質な日本語組版を実現。
 import { mkdir, writeFile } from "node:fs/promises";
 import { chromium } from "playwright";
-import { CARDS_DIR, cardPath } from "./lib.mjs";
+import { CARDS_DIR, cardPath, slidePath } from "./lib.mjs";
 
 const esc = (s = "") =>
   String(s)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
+
+// ── カルーセル1枚ぶんのHTML（1ページ＝短い言葉。文字数はできるだけ絞る）──
+function slideHtml(slide, index, total, theme) {
+  const isCover = index === 0;
+  const textHtml = esc(slide.text || slide).replace(/\n/g, "<br>");
+  const kicker = isCover
+    ? `<span class="tag">${esc(theme)}</span>`
+    : `<span class="page">${String(index + 1).padStart(2, "0")} / ${String(
+        total
+      ).padStart(2, "0")}</span>`;
+  const dots = Array.from({ length: total }, (_, i) =>
+    `<span class="dot${i === index ? " on" : ""}"></span>`
+  ).join("");
+  const swipe =
+    index < total - 1
+      ? `<span class="swipe">スワイプ →</span>`
+      : `<span class="swipe">覚醒モデル</span>`;
+  return `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --ink:#1a1410; --gold:#b8860b; --gold-light:#d4a017; --paper:#f5f0e8; --muted:#9d907b; }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ width:1080px; height:1350px; }
+  body{
+    background:
+      radial-gradient(1100px 700px at 50% 42%, #241c12 0%, var(--ink) 62%),
+      var(--ink);
+    color:var(--paper);
+    font-family:'Noto Sans JP', sans-serif;
+    padding:80px; display:flex; flex-direction:column;
+  }
+  .top{ display:flex; justify-content:space-between; align-items:center; min-height:56px; }
+  .tag{
+    font-size:28px; letter-spacing:.16em; color:var(--gold-light);
+    border:1px solid var(--gold); border-radius:999px; padding:10px 26px;
+  }
+  .page{ font-size:30px; letter-spacing:.22em; color:var(--muted); }
+  .center{ flex:1; display:flex; align-items:center; justify-content:center; text-align:center; }
+  .big{
+    font-family:'Shippori Mincho', serif; font-weight:800; color:#fff;
+    font-size:${isCover ? 118 : 132}px; line-height:1.34; letter-spacing:.03em;
+    text-shadow:0 4px 40px rgba(0,0,0,.4);
+  }
+  .big .accent{ color:var(--gold-light); }
+  .bottom{ display:flex; flex-direction:column; align-items:center; gap:26px; }
+  .dots{ display:flex; gap:14px; }
+  .dot{ width:12px; height:12px; border-radius:50%; background:#4a3f2e; }
+  .dot.on{ background:var(--gold-light); box-shadow:0 0 12px rgba(212,160,23,.6); }
+  .swipe{ font-size:26px; letter-spacing:.2em; color:var(--muted); font-family:'Shippori Mincho', serif; }
+</style></head><body>
+  <div class="top">${kicker}<span class="brand-mini"></span></div>
+  <div class="center"><div class="big">${textHtml}</div></div>
+  <div class="bottom"><div class="dots">${dots}</div>${swipe}</div>
+</body></html>`;
+}
 
 function cardHtml(post) {
   const titleHtml = esc(post.title).replace(/\n/g, "<br>");
@@ -102,7 +157,7 @@ function cardHtml(post) {
 </body></html>`;
 }
 
-export async function renderCard(post) {
+async function withBrowser(fn) {
   await mkdir(CARDS_DIR, { recursive: true });
   const launchOpts = { args: ["--no-sandbox"] };
   // ローカル環境などでプリインストール済みChromiumを使う場合に指定
@@ -115,15 +170,44 @@ export async function renderCard(post) {
       viewport: { width: 1080, height: 1350 },
       deviceScaleFactor: 2,
     });
-    await page.setContent(cardHtml(post), { waitUntil: "networkidle" });
-    // Webフォントの読み込み完了を待つ
-    await page.evaluate(() => document.fonts.ready);
-    const out = cardPath(post.id);
-    await page.screenshot({ path: out });
-    return out;
+    return await fn(page);
   } finally {
     await browser.close();
   }
+}
+
+async function shoot(page, html, out) {
+  await page.setContent(html, { waitUntil: "networkidle" });
+  await page.evaluate(() => document.fonts.ready); // Webフォント読込待ち
+  await page.screenshot({ path: out });
+  return out;
+}
+
+// 1枚もの（旧形式）
+export async function renderCard(post) {
+  return withBrowser((page) => shoot(page, cardHtml(post), cardPath(post.id)));
+}
+
+// カルーセル（slides がある場合）: 1ページずつ画像を生成
+export async function renderSlides(post) {
+  const total = post.slides.length;
+  return withBrowser(async (page) => {
+    const paths = [];
+    for (let i = 0; i < total; i++) {
+      const out = slidePath(post.id, i);
+      await shoot(page, slideHtml(post.slides[i], i, total, post.theme), out);
+      paths.push(out);
+    }
+    return paths;
+  });
+}
+
+// slides があればカルーセル、なければ1枚もの
+export async function renderPost(post) {
+  if (Array.isArray(post.slides) && post.slides.length > 0) {
+    return renderSlides(post);
+  }
+  return [await renderCard(post)];
 }
 
 // 単体実行: node render.mjs <postId?> でプレビュー生成
@@ -138,8 +222,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     post = (await pickNext()).next;
     if (!post) throw new Error("未投稿の記事がありません");
   }
-  const out = await renderCard(post);
-  console.log(`画像を生成しました: ${out}`);
+  const paths = await renderPost(post);
+  console.log(`画像を生成しました（${paths.length}枚）:`);
+  for (const p of paths) console.log(`  - ${p}`);
   // GitHub Actions向けに選んだIDを出力
   if (process.env.GITHUB_OUTPUT) {
     await writeFile(process.env.GITHUB_OUTPUT, `post_id=${post.id}\n`, {
