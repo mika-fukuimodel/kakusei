@@ -10,6 +10,91 @@ const esc = (s = "") =>
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
+// ── フィード用の共通スタイル ──
+const FEED_STYLE = `
+  :root{ --ink:#1a1410; --gold:#b8860b; --gold-light:#d4a017; --paper:#f5f0e8; --muted:#9d907b; }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ width:1080px; height:1350px; }
+  body{
+    background:
+      radial-gradient(1100px 700px at 50% 30%, #241c12 0%, var(--ink) 62%),
+      var(--ink);
+    color:var(--paper); font-family:'Noto Sans JP', sans-serif;
+    padding:90px 80px 74px; display:flex; flex-direction:column;
+  }
+  .top{ min-height:60px; }
+  .tag{
+    display:inline-block; font-size:30px; letter-spacing:.16em; color:var(--gold-light);
+    border:1px solid var(--gold); border-radius:999px; padding:11px 30px;
+  }
+  .page{ font-size:30px; letter-spacing:.22em; color:var(--muted); }
+  .mid{ flex:1; display:flex; flex-direction:column; justify-content:center; }
+  .cover-title{
+    font-family:'Shippori Mincho', serif; font-weight:800; color:#fff;
+    font-size:78px; line-height:1.4; letter-spacing:.02em;
+  }
+  .cover-title .q{ color:var(--gold-light); }
+  .point{ position:relative; padding-left:56px; }
+  .point::before{
+    content:""; position:absolute; left:4px; top:24px;
+    width:22px; height:22px; border-radius:50%;
+    background:var(--gold-light); box-shadow:0 0 16px rgba(212,160,23,.6);
+  }
+  .point .text{ font-size:52px; line-height:1.62; font-weight:500; color:#fff; }
+  .point .source{
+    margin-top:34px; font-size:32px; line-height:1.6; color:var(--muted);
+    font-weight:400; padding-left:22px; border-left:3px solid var(--gold);
+  }
+  .bottom{ display:flex; flex-direction:column; align-items:center; gap:24px; }
+  .dots{ display:flex; gap:16px; }
+  .dot{ width:13px; height:13px; border-radius:50%; background:#4a3f2e; }
+  .dot.on{ background:var(--gold-light); box-shadow:0 0 12px rgba(212,160,23,.6); }
+  .foot{ display:flex; gap:20px; align-items:center; font-size:26px; letter-spacing:.14em; color:var(--muted); }
+  .foot b{ font-family:'Shippori Mincho', serif; color:var(--gold-light); font-weight:700; letter-spacing:.22em; }
+`;
+
+function feedFooter(index, total) {
+  const dots = Array.from({ length: total }, (_, i) =>
+    `<span class="dot${i === index ? " on" : ""}"></span>`
+  ).join("");
+  const hint = index < total - 1 ? "スワイプ →" : "覚醒モデル";
+  return `<div class="bottom"><div class="dots">${dots}</div>
+    <div class="foot"><b>覚醒モデル</b><span>${hint}</span></div></div>`;
+}
+
+// フィードの表紙（見出し）
+function feedCoverHtml(post, total) {
+  const titleHtml = esc(post.title)
+    .replace(/\n/g, "<br>")
+    .replace(/「([^」]*)」/g, '<span class="q">「$1」</span>');
+  return `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>${FEED_STYLE}</style></head><body>
+  <div class="top"><span class="tag">${esc(post.theme)}</span></div>
+  <div class="mid"><div class="cover-title">${titleHtml}</div></div>
+  ${feedFooter(0, total)}
+</body></html>`;
+}
+
+// フィードの本文（ポイント1つ＋根拠）
+function feedPointHtml(point, index, total) {
+  const sourceHtml = point.source
+    ? `<div class="source">${esc(point.source)}</div>`
+    : "";
+  return `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>${FEED_STYLE}</style></head><body>
+  <div class="top"><span class="page">${String(index + 1).padStart(
+    2,
+    "0"
+  )} / ${String(total).padStart(2, "0")}</span></div>
+  <div class="mid"><div class="point"><div class="text">${esc(
+    point.text
+  )}</div>${sourceHtml}</div></div>
+  ${feedFooter(index, total)}
+</body></html>`;
+}
+
 // ── カルーセル1枚ぶんのHTML（1ページ＝短い言葉。文字数はできるだけ絞る）──
 function slideHtml(slide, index, total, theme) {
   const isCover = index === 0;
@@ -188,6 +273,25 @@ export async function renderCard(post) {
   return withBrowser((page) => shoot(page, cardHtml(post), cardPath(post.id)));
 }
 
+// フィード（format:"feed"）: 表紙＋ポイントごとに1枚ずつ画像を生成
+export async function renderFeed(post) {
+  const total = 1 + post.points.length; // 表紙 + 各ポイント
+  return withBrowser(async (page) => {
+    const paths = [];
+    // 表紙
+    let out = slidePath(post.id, 0);
+    await shoot(page, feedCoverHtml(post, total), out);
+    paths.push(out);
+    // 各ポイント
+    for (let i = 0; i < post.points.length; i++) {
+      out = slidePath(post.id, i + 1);
+      await shoot(page, feedPointHtml(post.points[i], i + 1, total), out);
+      paths.push(out);
+    }
+    return paths;
+  });
+}
+
 // カルーセル（slides がある場合）: 1ページずつ画像を生成
 export async function renderSlides(post) {
   const total = post.slides.length;
@@ -202,8 +306,11 @@ export async function renderSlides(post) {
   });
 }
 
-// slides があればカルーセル、なければ1枚もの
+// format:"feed" → フィード分割、slides → カルーセル、なければ1枚もの
 export async function renderPost(post) {
+  if (post.format === "feed" && Array.isArray(post.points)) {
+    return renderFeed(post);
+  }
   if (Array.isArray(post.slides) && post.slides.length > 0) {
     return renderSlides(post);
   }
