@@ -41,6 +41,17 @@
   --red: #e0687a;
   --white: #ffffff;
   --success: #4caf7d;
+
+  /* パネルの立体感用（既存色は保持し、上面を一段明るく） */
+  --bg-panel-raised: #1a2338;
+  --bg-panel-2-raised: #161d30;
+  --hairline-top: rgba(255,255,255,0.05);   /* 上辺ハイライト */
+
+  /* 奥行き（影）— のっぺり解消 */
+  --shadow-sm: 0 1px 0 var(--hairline-top) inset, 0 8px 20px -14px rgba(0,0,0,0.85);
+  --shadow-md: 0 1px 0 var(--hairline-top) inset, 0 20px 44px -26px rgba(0,0,0,0.9);
+  --shadow-lg: 0 1px 0 var(--hairline-top) inset, 0 34px 64px -30px rgba(0,0,0,0.95);
+  --glow-accent: 0 14px 34px -16px rgba(232,92,138,0.55);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -50,6 +61,22 @@ body {
   color: var(--text-body);
   font-family: system-ui, -apple-system, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif;
   min-height: 100vh;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* 画面全体の空気感（固定のやわらかい光源）。のっぺり解消の土台 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 50% at 50% -8%, rgba(232,145,47,0.10), transparent 60%),
+    radial-gradient(90% 60% at 100% 0%, rgba(138,90,160,0.12), transparent 55%),
+    radial-gradient(120% 90% at 50% 120%, rgba(0,0,0,0.55), transparent 70%);
 }
 
 /* ログイン画面 */
@@ -62,33 +89,61 @@ body {
   width: 100%;
   padding: 40px 20px;
   animation: fadeIn 0.8s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-#login-form-area, #register-form-area {
+/* トップの主光源。ゆっくり呼吸してロゴの背後を照らす */
+#login-screen::before {
+  content: '';
+  position: absolute;
+  top: -12%;
+  left: 50%;
+  width: min(560px, 92vw);
+  height: min(560px, 92vw);
+  transform: translateX(-50%);
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(232,92,138,0.18), rgba(232,145,47,0.08) 45%, transparent 66%);
+  filter: blur(18px);
+  animation: auraBreathe 8s ease-in-out infinite;
+}
+
+#login-form-area, #register-form-area, #forgot-form-area {
   width: 100%;
   max-width: 400px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel));
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  padding: 28px 26px;
+  box-shadow: var(--shadow-lg);
 }
 
 .login-header {
   text-align: center;
-  margin-bottom: 48px;
+  margin-bottom: 44px;
+  position: relative;
+  z-index: 1;
 }
 
 .login-header h1 {
   font-family: 'Audiowide', 'Shippori Mincho', sans-serif;
-  font-size: 40px;
+  font-size: clamp(44px, 12vw, 56px);
   font-weight: 400;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: var(--text-main);
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  text-shadow: 0 0 32px rgba(232,92,138,0.35), 0 2px 4px rgba(0,0,0,0.4);
 }
 
 .login-header p {
-  font-size: 12px;
-  letter-spacing: 0.3em;
+  font-size: 12.5px;
+  letter-spacing: 0.34em;
   color: var(--text-sub);
 }
 
@@ -108,20 +163,21 @@ body {
 
 .login-input {
   background: var(--bg-input);
-  border: 0.5px solid var(--border-input);
+  border: 1px solid var(--border-input);
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 14px 16px;
   color: var(--text-main);
   font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
-  font-size: 15px;
+  font-size: 15.5px;
   letter-spacing: 0.03em;
   width: 100%;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .login-input:focus {
   outline: none;
-  border-color: #6b7db3;
+  border-color: #7d8fc7;
+  box-shadow: 0 0 0 3px rgba(125,143,199,0.18);
 }
 
 .login-input::placeholder { color: #5f6f92; }
@@ -132,17 +188,19 @@ body {
   color: #fff;
   border: none;
   border-radius: 8px;
-  padding: 13px;
+  padding: 15px;
   font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
-  font-size: 15px;
+  font-size: 15.5px;
   font-weight: 600;
   letter-spacing: 0.08em;
   cursor: pointer;
-  transition: filter 0.2s;
+  transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
   margin-top: 8px;
+  box-shadow: var(--glow-accent);
 }
 
-.login-btn:hover { filter: brightness(1.12); }
+.login-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.login-btn:active { transform: translateY(0); }
 
 .login-error {
   text-align: center;
@@ -162,8 +220,8 @@ body {
 
 /* ヘッダー */
 .app-header {
-  background: rgba(15,20,25,0.85);
-  border-bottom: 0.5px solid var(--border-soft);
+  background: rgba(15,20,25,0.82);
+  border-bottom: 1px solid var(--border-soft);
   padding: 16px 32px;
   display: flex;
   align-items: center;
@@ -171,7 +229,8 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px -22px rgba(0,0,0,0.9);
 }
 
 .app-header h1 {
@@ -183,10 +242,10 @@ body {
 }
 
 .role-badge {
-  font-size: 10px;
-  letter-spacing: 0.3em;
-  padding: 4px 12px;
-  border: 0.5px solid var(--border-input);
+  font-size: 11px;
+  letter-spacing: 0.26em;
+  padding: 5px 13px;
+  border: 1px solid var(--border-input);
   border-radius: 6px;
   color: var(--text-sub);
 }
@@ -235,18 +294,19 @@ body {
 }
 
 .stage-indicator .stage-name {
-  font-size: 14px;
-  letter-spacing: 0.2em;
+  font-size: 16px;
+  letter-spacing: 0.18em;
   color: var(--text-sub);
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 .q-card {
-  background: var(--bg-panel);
-  border: 0.5px solid var(--border-soft);
-  border-radius: 12px;
-  padding: 24px;
+  background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel));
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  padding: 26px;
   margin-bottom: 20px;
+  box-shadow: var(--shadow-md);
   animation: slideUp 0.6s ease both;
 }
 
@@ -255,8 +315,8 @@ body {
 .q-card:nth-child(4) { animation-delay: 0.3s; }
 
 .q-label {
-  font-size: 9px;
-  letter-spacing: 0.4em;
+  font-size: 11px;
+  letter-spacing: 0.28em;
   color: var(--text-sub);
   text-transform: uppercase;
   margin-bottom: 12px;
@@ -264,12 +324,12 @@ body {
 
 .q-text {
   font-family: 'Shippori Mincho', serif;
-  font-size: 17px;
+  font-size: 18.5px;
   font-weight: 500;
   letter-spacing: 0.03em;
-  line-height: 1.7;
+  line-height: 1.9;
   color: var(--text-main);
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .options {
@@ -280,64 +340,70 @@ body {
 
 .option-btn {
   background: var(--bg-input);
-  border: 0.5px solid var(--border-input);
-  border-radius: 8px;
-  padding: 12px 16px;
+  border: 1px solid var(--border-input);
+  border-radius: 9px;
+  padding: 14px 16px;
   color: var(--text-body);
   font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   letter-spacing: 0.03em;
+  line-height: 1.6;
   cursor: pointer;
   text-align: left;
   transition: all 0.2s;
 }
 
-.option-btn:hover { border-color: #6b7db3; }
+.option-btn:hover { border-color: #7d8fc7; transform: translateY(-1px); }
 .option-btn.selected {
-  border: none;
+  border: 1px solid transparent;
   color: #fff;
   background: var(--accent-grad);
+  box-shadow: var(--glow-accent);
 }
 
 .free-input {
   background: var(--bg-input);
-  border: 0.5px solid var(--border-input);
-  border-radius: 8px;
-  padding: 10px 12px;
+  border: 1px solid var(--border-input);
+  border-radius: 9px;
+  padding: 13px 15px;
   color: var(--text-main);
   font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   letter-spacing: 0.03em;
+  line-height: 1.7;
   width: 100%;
   resize: none;
-  min-height: 80px;
-  transition: border-color 0.2s;
+  min-height: 88px;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .free-input:focus {
   outline: none;
-  border-color: #6b7db3;
+  border-color: #7d8fc7;
+  box-shadow: 0 0 0 3px rgba(125,143,199,0.18);
 }
 
-.free-input::placeholder { color: #5f6f92; font-size: 13px; }
+.free-input::placeholder { color: #6b7ba0; font-size: 14px; }
 
 .submit-btn {
   width: 100%;
   background: var(--accent-grad);
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 14px;
+  border-radius: 9px;
+  padding: 16px;
   font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
-  font-size: 15px;
+  font-size: 15.5px;
   font-weight: 600;
   letter-spacing: 0.08em;
   cursor: pointer;
-  transition: filter 0.2s;
+  transition: filter 0.2s, transform 0.15s;
   margin-top: 8px;
+  box-shadow: var(--glow-accent);
 }
 
-.submit-btn:hover { filter: brightness(1.12); }
+.submit-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.submit-btn:active { transform: translateY(0); }
 .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .hidden { display: none !important; }
@@ -349,11 +415,12 @@ body {
 .supporter-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  background: var(--bg-panel-2);
-  border: 0.5px solid var(--border-soft);
-  border-radius: 12px;
-  padding: 24px;
+  gap: 22px;
+  background: linear-gradient(180deg, var(--bg-panel-2-raised), var(--bg-panel-2));
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  padding: 26px;
+  box-shadow: var(--shadow-md);
 }
 
 .form-group {
@@ -363,20 +430,20 @@ body {
 }
 
 .form-label {
-  font-size: 10px;
-  letter-spacing: 0.35em;
+  font-size: 11.5px;
+  letter-spacing: 0.24em;
   color: var(--text-sub);
   text-transform: uppercase;
 }
 
 .form-select {
   background: var(--bg-input);
-  border: 0.5px solid var(--border-input);
-  border-radius: 8px;
-  padding: 10px 12px;
+  border: 1px solid var(--border-input);
+  border-radius: 9px;
+  padding: 13px 15px;
   color: #fff;
   font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   cursor: pointer;
   appearance: none;
 }
@@ -392,10 +459,10 @@ body {
 }
 
 .emotion-tag {
-  padding: 5px 12px;
-  border: 0.5px solid var(--border-input);
+  padding: 7px 15px;
+  border: 1px solid var(--border-input);
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 13.5px;
   background: var(--bg-input);
   color: var(--text-body);
   cursor: pointer;
@@ -416,12 +483,12 @@ body {
 
 .toggle-btn {
   flex: 1;
-  padding: 10px;
-  border: 0.5px solid var(--border-input);
+  padding: 12px;
+  border: 1px solid var(--border-input);
   border-radius: 20px;
   background: var(--bg-input);
   color: var(--text-body);
-  font-size: 14px;
+  font-size: 15px;
   cursor: pointer;
   transition: all 0.2s;
   letter-spacing: 0.03em;
@@ -444,8 +511,8 @@ body {
   cursor: pointer;
 }
 
-.alert-toggle input { cursor: pointer; accent-color: var(--red); }
-.alert-toggle label { font-size: 14px; color: var(--text-body); cursor: pointer; letter-spacing: 0.03em; }
+.alert-toggle input { cursor: pointer; accent-color: var(--red); width: 17px; height: 17px; }
+.alert-toggle label { font-size: 14.5px; color: var(--text-body); cursor: pointer; letter-spacing: 0.03em; }
 
 /* ========== ディレクター画面 ========== */
 #director-view { display: none; }
@@ -454,19 +521,20 @@ body {
   display: flex;
   gap: 2px;
   margin-bottom: 32px;
-  border-bottom: 0.5px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
 }
 
 .dir-tab {
-  padding: 10px 20px;
-  font-size: 13px;
-  letter-spacing: 0.06em;
+  padding: 12px 22px;
+  font-size: 15px;
+  letter-spacing: 0.04em;
   color: var(--text-sub);
   cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
   transition: all 0.2s;
 }
+.dir-tab:hover { color: var(--text-body); }
 
 .dir-tab.active {
   color: var(--text-main);
@@ -481,54 +549,61 @@ body {
 }
 
 .stat-card {
-  background: var(--bg-panel);
-  border: 0.5px solid var(--border-soft);
-  border-radius: 12px;
-  padding: 20px;
+  background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel));
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  padding: 24px 20px;
   text-align: center;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.18s, box-shadow 0.18s;
 }
+.stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
 
 .stat-num {
   font-family: 'Shippori Mincho', serif;
-  font-size: 36px;
+  font-size: 42px;
   font-weight: 700;
   color: var(--text-main);
+  line-height: 1;
 }
 
 .stat-label {
-  font-size: 10px;
-  letter-spacing: 0.15em;
+  font-size: 12.5px;
+  letter-spacing: 0.12em;
   color: var(--text-sub);
-  margin-top: 4px;
+  margin-top: 8px;
 }
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
   background: var(--bg-panel);
-  border: 0.5px solid var(--border-soft);
-  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
   overflow: hidden;
+  box-shadow: var(--shadow-md);
 }
 
 .data-table th {
-  font-size: 9px;
-  letter-spacing: 0.25em;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
   color: var(--text-sub);
   text-transform: uppercase;
-  padding: 12px;
+  padding: 14px 14px;
   text-align: left;
   background: rgba(255,255,255,0.06);
-  border-bottom: 0.5px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+  white-space: nowrap;
 }
 
 .data-table td {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text-body);
-  padding: 12px;
+  padding: 14px;
   background: rgba(255,255,255,0.02);
-  border-bottom: 0.5px solid var(--border-soft);
-  letter-spacing: 0.03em;
+  border-bottom: 1px solid rgba(42,53,80,0.6);
+  letter-spacing: 0.02em;
 }
 
 .data-table tr:hover td {
@@ -537,13 +612,14 @@ body {
 
 .stage-pill {
   display: inline-block;
-  padding: 3px 11px;
+  padding: 4px 13px;
   border-radius: 20px;
-  font-size: 10px;
+  font-size: 12.5px;
   font-weight: 500;
   letter-spacing: 0.03em;
   color: #fff;
   background: var(--stage-2);
+  box-shadow: 0 4px 12px -6px rgba(0,0,0,0.7);
 }
 
 /* 七段階カラースケール（バッジ）— 定義パネルと同一スケール */
@@ -567,18 +643,19 @@ body {
 /* 成長フェーズ定義パネル */
 .stage-guide {
   margin-bottom: 28px;
-  border: 0.5px solid var(--border-soft);
-  border-radius: 12px;
-  background: var(--bg-panel);
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel));
+  box-shadow: var(--shadow-md);
 }
 
 .stage-guide summary {
   cursor: pointer;
-  padding: 16px 18px;
+  padding: 20px 22px;
   font-family: 'Shippori Mincho', serif;
-  font-size: 14px;
+  font-size: 16.5px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: var(--text-main);
   list-style: none;
   display: flex;
@@ -588,7 +665,7 @@ body {
 }
 
 .stage-guide summary::-webkit-details-marker { display: none; }
-.stage-guide summary::after { content: '＋'; font-size: 14px; color: var(--text-sub); }
+.stage-guide summary::after { content: '＋'; font-size: 20px; color: var(--text-sub); }
 .stage-guide[open] summary::after { content: '－'; }
 
 .stage-guide .guide-body { padding: 0 18px 16px; }
@@ -602,7 +679,7 @@ body {
 
 .guide-stage {
   font-family: 'Shippori Mincho', serif;
-  font-size: 18px;
+  font-size: 21px;
   font-weight: 700;
   min-width: 1.4em;
   text-align: center;
@@ -620,17 +697,17 @@ body {
 
 .guide-text .guide-name {
   font-family: 'Shippori Mincho', serif;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 500;
   color: var(--text-main);
   letter-spacing: 0.03em;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 
 .guide-text .guide-def {
-  font-size: 12px;
+  font-size: 13.5px;
   color: var(--text-body);
-  line-height: 1.8;
+  line-height: 1.9;
   letter-spacing: 0.03em;
 }
 
@@ -661,56 +738,69 @@ body {
 }
 
 .success-msg p {
-  font-size: 13px;
+  font-size: 14.5px;
   color: var(--text-sub);
   letter-spacing: 0.03em;
-  line-height: 1.8;
+  line-height: 1.9;
   margin-bottom: 24px;
 }
 
 .ai-feedback {
-  background: var(--bg-panel);
-  border: 0.5px solid var(--border-soft);
-  border-radius: 12px;
-  padding: 20px 24px;
+  background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel));
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  padding: 22px 26px;
   margin-bottom: 24px;
   text-align: left;
+  box-shadow: var(--shadow-md);
 }
 
 .ai-feedback .ai-label {
-  font-size: 9px;
-  letter-spacing: 0.35em;
+  font-size: 10.5px;
+  letter-spacing: 0.28em;
   color: var(--text-sub);
   margin-bottom: 10px;
 }
 
 .ai-feedback p {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-body);
-  line-height: 1.9;
+  line-height: 2;
   letter-spacing: 0.03em;
   margin-bottom: 0;
 }
 
 .section-title {
   font-family: 'Shippori Mincho', serif;
-  font-size: 20px;
+  font-size: 21px;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--text-main);
   margin-bottom: 24px;
   padding-bottom: 12px;
-  border-bottom: 0.5px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
 }
+
+/* 表が広い時はページ本体でなくタブ内で横スクロール */
+#tab-overview, #tab-participants, #tab-alerts, #tab-triggers { overflow-x: auto; }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes auraBreathe {
+  0%, 100% { opacity: 0.55; transform: translateX(-50%) scale(1); }
+  50%      { opacity: 0.95; transform: translateX(-50%) scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #login-screen::before { animation: none; }
+  .q-card, .stat-card, .option-btn, .login-btn, .submit-btn { animation: none; transition: none; }
+}
 
 @media (max-width: 600px) {
   .app-content { padding: 24px 16px; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .app-header { padding: 12px 16px; }
-  .data-table th, .data-table td { padding: 10px 8px; }
+  .data-table th, .data-table td { padding: 12px 10px; }
 }
 </style>
 </head>
@@ -775,7 +865,7 @@ body {
     </div>
   </div>
 
-  <div style="margin-top:40px;text-align:center;font-size:11px;letter-spacing:0.05em;">
+  <div style="margin-top:40px;text-align:center;font-size:12.5px;letter-spacing:0.05em;line-height:2;">
     <a href="privacy.html" style="color:var(--text-sub);text-decoration:underline;">プライバシーポリシー</a>
     <span style="color:var(--border-input);margin:0 8px;">／</span>
     <a href="security.html" style="color:var(--text-sub);text-decoration:underline;">セキュリティポリシー</a>
