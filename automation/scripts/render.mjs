@@ -57,9 +57,9 @@ function feedFooter(index, total) {
   const dots = Array.from({ length: total }, (_, i) =>
     `<span class="dot${i === index ? " on" : ""}"></span>`
   ).join("");
-  const hint = index < total - 1 ? "スワイプ →" : "覚醒モデル";
+  const hint = index < total - 1 ? "<span>スワイプ →</span>" : "";
   return `<div class="bottom"><div class="dots">${dots}</div>
-    <div class="foot"><b>覚醒モデル</b><span>${hint}</span></div></div>`;
+    <div class="foot"><b>覚醒モデル</b>${hint}</div></div>`;
 }
 
 // フィードの表紙（見出し）
@@ -73,6 +73,26 @@ function feedCoverHtml(post, total) {
   <div class="top"><span class="tag">${esc(post.theme)}</span></div>
   <div class="mid"><div class="cover-title">${titleHtml}</div></div>
   ${feedFooter(0, total)}
+</body></html>`;
+}
+
+// フィードの締めページ
+function feedClosingHtml(post, index, total) {
+  const textHtml = esc(post.closing).replace(/\n/g, "<br>");
+  return `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>${FEED_STYLE}
+  .closing-text{
+    font-family:'Shippori Mincho', serif; font-weight:700; color:#fff;
+    font-size:58px; line-height:1.7; letter-spacing:.02em;
+  }
+</style></head><body>
+  <div class="top"><span class="page">${String(index + 1).padStart(
+    2,
+    "0"
+  )} / ${String(total).padStart(2, "0")}</span></div>
+  <div class="mid"><div class="closing-text">${textHtml}</div></div>
+  ${feedFooter(index, total)}
 </body></html>`;
 }
 
@@ -275,7 +295,8 @@ export async function renderCard(post) {
 
 // フィード（format:"feed"）: 表紙＋ポイントごとに1枚ずつ画像を生成
 export async function renderFeed(post) {
-  const total = 1 + post.points.length; // 表紙 + 各ポイント
+  const hasClosing = Boolean(post.closing);
+  const total = 1 + post.points.length + (hasClosing ? 1 : 0); // 表紙+各ポイント+締め
   return withBrowser(async (page) => {
     const paths = [];
     // 表紙
@@ -286,6 +307,12 @@ export async function renderFeed(post) {
     for (let i = 0; i < post.points.length; i++) {
       out = slidePath(post.id, i + 1);
       await shoot(page, feedPointHtml(post.points[i], i + 1, total), out);
+      paths.push(out);
+    }
+    // 締め
+    if (hasClosing) {
+      out = slidePath(post.id, total - 1);
+      await shoot(page, feedClosingHtml(post, total - 1, total), out);
       paths.push(out);
     }
     return paths;
