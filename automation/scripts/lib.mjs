@@ -91,6 +91,10 @@ export function buildCaption(post, platform) {
   } else if (Array.isArray(post.body)) {
     bodyParts.push(post.body.map((t) => `・${t}`).join("\n\n"));
   }
-  if (post.closing) bodyParts.push(post.closing);
+  if (post.closing) {
+    bodyParts.push(
+      Array.isArray(post.closing) ? post.closing.join("\n\n") : post.closing
+    );
+  }
   return `${title}\n\n${bodyParts.join("\n\n")}\n\n${tags}`;
 }
