@@ -41,6 +41,17 @@
   --red: #e0687a;
   --white: #ffffff;
   --success: #4caf7d;
+
+  /* パネルの立体感用（既存色は保持し、上面を一段明るく） */
+  --bg-panel-raised: #1a2338;
+  --bg-panel-2-raised: #161d30;
+  --hairline-top: rgba(255,255,255,0.05);   /* 上辺ハイライト */
+
+  /* 奥行き（影）— のっぺり解消 */
+  --shadow-sm: 0 1px 0 var(--hairline-top) inset, 0 8px 20px -14px rgba(0,0,0,0.85);
+  --shadow-md: 0 1px 0 var(--hairline-top) inset, 0 20px 44px -26px rgba(0,0,0,0.9);
+  --shadow-lg: 0 1px 0 var(--hairline-top) inset, 0 34px 64px -30px rgba(0,0,0,0.95);
+  --glow-accent: 0 14px 34px -16px rgba(232,92,138,0.55);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -50,6 +61,22 @@ body {
   color: var(--text-body);
   font-family: system-ui, -apple-system, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif;
   min-height: 100vh;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* 画面全体の空気感（固定のやわらかい光源）。のっぺり解消の土台 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 50% at 50% -8%, rgba(232,145,47,0.10), transparent 60%),
+    radial-gradient(90% 60% at 100% 0%, rgba(138,90,160,0.12), transparent 55%),
+    radial-gradient(120% 90% at 50% 120%, rgba(0,0,0,0.55), transparent 70%);
 }
 
 /* ログイン画面 */
@@ -62,33 +89,61 @@ body {
   width: 100%;
   padding: 40px 20px;
   animation: fadeIn 0.8s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-#login-form-area, #register-form-area {
+/* トップの主光源。ゆっくり呼吸してロゴの背後を照らす */
+#login-screen::before {
+  content: '';
+  position: absolute;
+  top: -12%;
+  left: 50%;
+  width: min(560px, 92vw);
+  height: min(560px, 92vw);
+  transform: translateX(-50%);
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(232,92,138,0.18), rgba(232,145,47,0.08) 45%, transparent 66%);
+  filter: blur(18px);
+  animation: auraBreathe 8s ease-in-out infinite;
+}
+
+#email-form-area, #otp-form-area, #profile-form-area, #code-issued-area {
   width: 100%;
   max-width: 400px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel));
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  padding: 28px 26px;
+  box-shadow: var(--shadow-lg);
 }
 
 .login-header {
   text-align: center;
-  margin-bottom: 48px;
+  margin-bottom: 44px;
+  position: relative;
+  z-index: 1;
 }
 
 .login-header h1 {
   font-family: 'Audiowide', 'Shippori Mincho', sans-serif;
-  font-size: 40px;
+  font-size: clamp(44px, 12vw, 56px);
   font-weight: 400;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: var(--text-main);
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  text-shadow: 0 0 32px rgba(232,92,138,0.35), 0 2px 4px rgba(0,0,0,0.4);
 }
 
 .login-header p {
-  font-size: 12px;
-  letter-spacing: 0.3em;
+  font-size: 12.5px;
+  letter-spacing: 0.34em;
   color: var(--text-sub);
 }
 
@@ -108,20 +163,21 @@ body {
 
 .login-input {
   background: var(--bg-input);
-  border: 0.5px solid var(--border-input);
+  border: 1px solid var(--border-input);
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 14px 16px;
   color: var(--text-main);
   font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
-  font-size: 15px;
+  font-size: 15.5px;
   letter-spacing: 0.03em;
   width: 100%;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .login-input:focus {
   outline: none;
-  border-color: #6b7db3;
+  border-color: #7d8fc7;
+  box-shadow: 0 0 0 3px rgba(125,143,199,0.18);
 }
 
 .login-input::placeholder { color: #5f6f92; }
@@ -132,17 +188,19 @@ body {
   color: #fff;
   border: none;
   border-radius: 8px;
-  padding: 13px;
+  padding: 15px;
   font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
-  font-size: 15px;
+  font-size: 15.5px;
   font-weight: 600;
   letter-spacing: 0.08em;
   cursor: pointer;
-  transition: filter 0.2s;
+  transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
   margin-top: 8px;
+  box-shadow: var(--glow-accent);
 }
 
-.login-btn:hover { filter: brightness(1.12); }
+.login-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.login-btn:active { transform: translateY(0); }
 
 .login-error {
   text-align: center;
@@ -150,6 +208,37 @@ body {
   color: var(--red);
   letter-spacing: 0.05em;
   min-height: 18px;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--text-sub);
+  font-size: 12.5px;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  text-decoration: underline;
+}
+.link-btn:hover { color: var(--text-main); }
+
+.role-btn {
+  flex: 1;
+  padding: 13px;
+  border: 1px solid var(--border-input);
+  border-radius: 9px;
+  background: var(--bg-input);
+  color: var(--text-body);
+  font-size: 14.5px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.05em;
+}
+.role-btn:hover { border-color: #7d8fc7; }
+.role-btn.selected {
+  border: 1px solid transparent;
+  color: #fff;
+  background: var(--accent-grad);
+  box-shadow: var(--glow-accent);
 }
 
 /* メイン画面 */
@@ -162,8 +251,8 @@ body {
 
 /* ヘッダー */
 .app-header {
-  background: rgba(15,20,25,0.85);
-  border-bottom: 0.5px solid var(--border-soft);
+  background: rgba(15,20,25,0.82);
+  border-bottom: 1px solid var(--border-soft);
   padding: 16px 32px;
   display: flex;
   align-items: center;
@@ -171,7 +260,8 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px -22px rgba(0,0,0,0.9);
 }
 
 .app-header h1 {
@@ -183,10 +273,10 @@ body {
 }
 
 .role-badge {
-  font-size: 10px;
-  letter-spacing: 0.3em;
-  padding: 4px 12px;
-  border: 0.5px solid var(--border-input);
+  font-size: 11px;
+  letter-spacing: 0.26em;
+  padding: 5px 13px;
+  border: 1px solid var(--border-input);
   border-radius: 6px;
   color: var(--text-sub);
 }
@@ -235,18 +325,19 @@ body {
 }
 
 .stage-indicator .stage-name {
-  font-size: 14px;
-  letter-spacing: 0.2em;
+  font-size: 16px;
+  letter-spacing: 0.18em;
   color: var(--text-sub);
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 .q-card {
-  background: var(--bg-panel);
-  border: 0.5px solid var(--border-soft);
-  border-radius: 12px;
-  padding: 24px;
+  background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel));
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  padding: 26px;
   margin-bottom: 20px;
+  box-shadow: var(--shadow-md);
   animation: slideUp 0.6s ease both;
 }
 
@@ -255,8 +346,8 @@ body {
 .q-card:nth-child(4) { animation-delay: 0.3s; }
 
 .q-label {
-  font-size: 9px;
-  letter-spacing: 0.4em;
+  font-size: 11px;
+  letter-spacing: 0.28em;
   color: var(--text-sub);
   text-transform: uppercase;
   margin-bottom: 12px;
@@ -264,12 +355,12 @@ body {
 
 .q-text {
   font-family: 'Shippori Mincho', serif;
-  font-size: 17px;
+  font-size: 18.5px;
   font-weight: 500;
   letter-spacing: 0.03em;
-  line-height: 1.7;
+  line-height: 1.9;
   color: var(--text-main);
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .options {
@@ -280,64 +371,70 @@ body {
 
 .option-btn {
   background: var(--bg-input);
-  border: 0.5px solid var(--border-input);
-  border-radius: 8px;
-  padding: 12px 16px;
+  border: 1px solid var(--border-input);
+  border-radius: 9px;
+  padding: 14px 16px;
   color: var(--text-body);
   font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   letter-spacing: 0.03em;
+  line-height: 1.6;
   cursor: pointer;
   text-align: left;
   transition: all 0.2s;
 }
 
-.option-btn:hover { border-color: #6b7db3; }
+.option-btn:hover { border-color: #7d8fc7; transform: translateY(-1px); }
 .option-btn.selected {
-  border: none;
+  border: 1px solid transparent;
   color: #fff;
   background: var(--accent-grad);
+  box-shadow: var(--glow-accent);
 }
 
 .free-input {
   background: var(--bg-input);
-  border: 0.5px solid var(--border-input);
-  border-radius: 8px;
-  padding: 10px 12px;
+  border: 1px solid var(--border-input);
+  border-radius: 9px;
+  padding: 13px 15px;
   color: var(--text-main);
   font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   letter-spacing: 0.03em;
+  line-height: 1.7;
   width: 100%;
   resize: none;
-  min-height: 80px;
-  transition: border-color 0.2s;
+  min-height: 88px;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .free-input:focus {
   outline: none;
-  border-color: #6b7db3;
+  border-color: #7d8fc7;
+  box-shadow: 0 0 0 3px rgba(125,143,199,0.18);
 }
 
-.free-input::placeholder { color: #5f6f92; font-size: 13px; }
+.free-input::placeholder { color: #6b7ba0; font-size: 14px; }
 
 .submit-btn {
   width: 100%;
   background: var(--accent-grad);
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 14px;
+  border-radius: 9px;
+  padding: 16px;
   font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
-  font-size: 15px;
+  font-size: 15.5px;
   font-weight: 600;
   letter-spacing: 0.08em;
   cursor: pointer;
-  transition: filter 0.2s;
+  transition: filter 0.2s, transform 0.15s;
   margin-top: 8px;
+  box-shadow: var(--glow-accent);
 }
 
-.submit-btn:hover { filter: brightness(1.12); }
+.submit-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.submit-btn:active { transform: translateY(0); }
 .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .hidden { display: none !important; }
@@ -349,11 +446,12 @@ body {
 .supporter-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  background: var(--bg-panel-2);
-  border: 0.5px solid var(--border-soft);
-  border-radius: 12px;
-  padding: 24px;
+  gap: 22px;
+  background: linear-gradient(180deg, var(--bg-panel-2-raised), var(--bg-panel-2));
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  padding: 26px;
+  box-shadow: var(--shadow-md);
 }
 
 .form-group {
@@ -363,20 +461,20 @@ body {
 }
 
 .form-label {
-  font-size: 10px;
-  letter-spacing: 0.35em;
+  font-size: 11.5px;
+  letter-spacing: 0.24em;
   color: var(--text-sub);
   text-transform: uppercase;
 }
 
 .form-select {
   background: var(--bg-input);
-  border: 0.5px solid var(--border-input);
-  border-radius: 8px;
-  padding: 10px 12px;
+  border: 1px solid var(--border-input);
+  border-radius: 9px;
+  padding: 13px 15px;
   color: #fff;
   font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   cursor: pointer;
   appearance: none;
 }
@@ -392,10 +490,10 @@ body {
 }
 
 .emotion-tag {
-  padding: 5px 12px;
-  border: 0.5px solid var(--border-input);
+  padding: 7px 15px;
+  border: 1px solid var(--border-input);
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 13.5px;
   background: var(--bg-input);
   color: var(--text-body);
   cursor: pointer;
@@ -416,12 +514,12 @@ body {
 
 .toggle-btn {
   flex: 1;
-  padding: 10px;
-  border: 0.5px solid var(--border-input);
+  padding: 12px;
+  border: 1px solid var(--border-input);
   border-radius: 20px;
   background: var(--bg-input);
   color: var(--text-body);
-  font-size: 14px;
+  font-size: 15px;
   cursor: pointer;
   transition: all 0.2s;
   letter-spacing: 0.03em;
@@ -444,8 +542,8 @@ body {
   cursor: pointer;
 }
 
-.alert-toggle input { cursor: pointer; accent-color: var(--red); }
-.alert-toggle label { font-size: 14px; color: var(--text-body); cursor: pointer; letter-spacing: 0.03em; }
+.alert-toggle input { cursor: pointer; accent-color: var(--red); width: 17px; height: 17px; }
+.alert-toggle label { font-size: 14.5px; color: var(--text-body); cursor: pointer; letter-spacing: 0.03em; }
 
 /* ========== ディレクター画面 ========== */
 #director-view { display: none; }
@@ -454,19 +552,20 @@ body {
   display: flex;
   gap: 2px;
   margin-bottom: 32px;
-  border-bottom: 0.5px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
 }
 
 .dir-tab {
-  padding: 10px 20px;
-  font-size: 13px;
-  letter-spacing: 0.06em;
+  padding: 12px 22px;
+  font-size: 15px;
+  letter-spacing: 0.04em;
   color: var(--text-sub);
   cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
   transition: all 0.2s;
 }
+.dir-tab:hover { color: var(--text-body); }
 
 .dir-tab.active {
   color: var(--text-main);
@@ -481,54 +580,61 @@ body {
 }
 
 .stat-card {
-  background: var(--bg-panel);
-  border: 0.5px solid var(--border-soft);
-  border-radius: 12px;
-  padding: 20px;
+  background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel));
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  padding: 24px 20px;
   text-align: center;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.18s, box-shadow 0.18s;
 }
+.stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
 
 .stat-num {
   font-family: 'Shippori Mincho', serif;
-  font-size: 36px;
+  font-size: 42px;
   font-weight: 700;
   color: var(--text-main);
+  line-height: 1;
 }
 
 .stat-label {
-  font-size: 10px;
-  letter-spacing: 0.15em;
+  font-size: 12.5px;
+  letter-spacing: 0.12em;
   color: var(--text-sub);
-  margin-top: 4px;
+  margin-top: 8px;
 }
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
   background: var(--bg-panel);
-  border: 0.5px solid var(--border-soft);
-  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
   overflow: hidden;
+  box-shadow: var(--shadow-md);
 }
 
 .data-table th {
-  font-size: 9px;
-  letter-spacing: 0.25em;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
   color: var(--text-sub);
   text-transform: uppercase;
-  padding: 12px;
+  padding: 14px 14px;
   text-align: left;
   background: rgba(255,255,255,0.06);
-  border-bottom: 0.5px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+  white-space: nowrap;
 }
 
 .data-table td {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text-body);
-  padding: 12px;
+  padding: 14px;
   background: rgba(255,255,255,0.02);
-  border-bottom: 0.5px solid var(--border-soft);
-  letter-spacing: 0.03em;
+  border-bottom: 1px solid rgba(42,53,80,0.6);
+  letter-spacing: 0.02em;
 }
 
 .data-table tr:hover td {
@@ -537,13 +643,14 @@ body {
 
 .stage-pill {
   display: inline-block;
-  padding: 3px 11px;
+  padding: 4px 13px;
   border-radius: 20px;
-  font-size: 10px;
+  font-size: 12.5px;
   font-weight: 500;
   letter-spacing: 0.03em;
   color: #fff;
   background: var(--stage-2);
+  box-shadow: 0 4px 12px -6px rgba(0,0,0,0.7);
 }
 
 /* 七段階カラースケール（バッジ）— 定義パネルと同一スケール */
@@ -567,18 +674,19 @@ body {
 /* 成長フェーズ定義パネル */
 .stage-guide {
   margin-bottom: 28px;
-  border: 0.5px solid var(--border-soft);
-  border-radius: 12px;
-  background: var(--bg-panel);
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel));
+  box-shadow: var(--shadow-md);
 }
 
 .stage-guide summary {
   cursor: pointer;
-  padding: 16px 18px;
+  padding: 20px 22px;
   font-family: 'Shippori Mincho', serif;
-  font-size: 14px;
+  font-size: 16.5px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: var(--text-main);
   list-style: none;
   display: flex;
@@ -588,7 +696,7 @@ body {
 }
 
 .stage-guide summary::-webkit-details-marker { display: none; }
-.stage-guide summary::after { content: '＋'; font-size: 14px; color: var(--text-sub); }
+.stage-guide summary::after { content: '＋'; font-size: 20px; color: var(--text-sub); }
 .stage-guide[open] summary::after { content: '－'; }
 
 .stage-guide .guide-body { padding: 0 18px 16px; }
@@ -602,7 +710,7 @@ body {
 
 .guide-stage {
   font-family: 'Shippori Mincho', serif;
-  font-size: 18px;
+  font-size: 21px;
   font-weight: 700;
   min-width: 1.4em;
   text-align: center;
@@ -620,17 +728,17 @@ body {
 
 .guide-text .guide-name {
   font-family: 'Shippori Mincho', serif;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 500;
   color: var(--text-main);
   letter-spacing: 0.03em;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 
 .guide-text .guide-def {
-  font-size: 12px;
+  font-size: 13.5px;
   color: var(--text-body);
-  line-height: 1.8;
+  line-height: 1.9;
   letter-spacing: 0.03em;
 }
 
@@ -661,56 +769,69 @@ body {
 }
 
 .success-msg p {
-  font-size: 13px;
+  font-size: 14.5px;
   color: var(--text-sub);
   letter-spacing: 0.03em;
-  line-height: 1.8;
+  line-height: 1.9;
   margin-bottom: 24px;
 }
 
 .ai-feedback {
-  background: var(--bg-panel);
-  border: 0.5px solid var(--border-soft);
-  border-radius: 12px;
-  padding: 20px 24px;
+  background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel));
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  padding: 22px 26px;
   margin-bottom: 24px;
   text-align: left;
+  box-shadow: var(--shadow-md);
 }
 
 .ai-feedback .ai-label {
-  font-size: 9px;
-  letter-spacing: 0.35em;
+  font-size: 10.5px;
+  letter-spacing: 0.28em;
   color: var(--text-sub);
   margin-bottom: 10px;
 }
 
 .ai-feedback p {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-body);
-  line-height: 1.9;
+  line-height: 2;
   letter-spacing: 0.03em;
   margin-bottom: 0;
 }
 
 .section-title {
   font-family: 'Shippori Mincho', serif;
-  font-size: 20px;
+  font-size: 21px;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--text-main);
   margin-bottom: 24px;
   padding-bottom: 12px;
-  border-bottom: 0.5px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
 }
+
+/* 表が広い時はページ本体でなくタブ内で横スクロール */
+#tab-overview, #tab-participants, #tab-alerts, #tab-triggers { overflow-x: auto; }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes auraBreathe {
+  0%, 100% { opacity: 0.55; transform: translateX(-50%) scale(1); }
+  50%      { opacity: 0.95; transform: translateX(-50%) scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #login-screen::before { animation: none; }
+  .q-card, .stat-card, .option-btn, .login-btn, .submit-btn { animation: none; transition: none; }
+}
 
 @media (max-width: 600px) {
   .app-content { padding: 24px 16px; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .app-header { padding: 12px 16px; }
-  .data-table th, .data-table td { padding: 10px 8px; }
+  .data-table th, .data-table td { padding: 12px 10px; }
 }
 </style>
 </head>
@@ -724,58 +845,67 @@ body {
     <p>TRANSFORMATION OS</p>
   </div>
 
-  <!-- ログインフォーム -->
-  <div id="login-form-area" class="login-form">
-    <input type="password" class="login-input" id="login-code" placeholder="コードを入力してください" />
-    <div class="login-error" id="login-error"></div>
-    <button class="login-btn" onclick="handleLogin()">入る</button>
-    <div style="text-align:center;margin-top:16px;">
-      <span style="font-size:12px;color:var(--muted);">初めての方は</span>
-      <button onclick="showRegister()" style="background:none;border:none;color:var(--gold);font-size:12px;cursor:pointer;letter-spacing:0.05em;text-decoration:underline;">新規登録</button>
+  <!-- ステップ1: メールアドレス入力(OTP送信) -->
+  <div id="email-form-area" class="login-form">
+    <div style="font-size:13px;color:var(--text-sub);text-align:center;line-height:1.9;margin-bottom:4px;">
+      登録済みの方も、初めての方も、<br>メールアドレスでログインできます。
     </div>
-    <div style="text-align:center;margin-top:8px;">
-      <button onclick="showForgot()" style="background:none;border:none;color:var(--text-sub);font-size:12px;cursor:pointer;letter-spacing:0.05em;text-decoration:underline;">コードを忘れた方</button>
-    </div>
-  </div>
-
-  <!-- コード再通知フォーム -->
-  <div id="forgot-form-area" class="login-form" style="display:none;">
-    <div style="text-align:center;margin-bottom:20px;">
-      <div style="font-size:11px;letter-spacing:0.3em;color:var(--muted);">CODE RECOVERY</div>
-      <div style="font-family:'Shippori Mincho',serif;font-size:16px;color:var(--text-main);margin-top:10px;letter-spacing:0.08em;">コードの再通知</div>
-    </div>
-    <div style="font-size:12px;color:var(--text-sub);text-align:center;line-height:1.8;margin-bottom:4px;">登録時のメールアドレスを入力してください。</div>
-    <input type="email" class="login-input" id="forgot-email" placeholder="メールアドレス" />
-    <button class="login-btn" onclick="handleForgotCode()">コードをメールで送る</button>
-    <div id="forgot-msg" style="text-align:center;font-size:12px;line-height:1.8;letter-spacing:0.03em;color:var(--text-sub);min-height:18px;"></div>
-    <div style="text-align:center;margin-top:8px;">
-      <button onclick="showLogin()" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;letter-spacing:0.05em;">← コードでログイン</button>
+    <input type="email" class="login-input" id="login-email" placeholder="メールアドレス" autocomplete="email" />
+    <div class="login-error" id="email-error"></div>
+    <button class="login-btn" id="send-otp-btn" onclick="handleSendOtp()">ログインコードを送る</button>
+    <div style="font-size:12px;color:var(--text-sub);text-align:center;line-height:1.8;">
+      実名の登録は不要です。メールはログイン確認のみに使われます。
     </div>
   </div>
 
-  <!-- 登録フォーム -->
-  <div id="register-form-area" class="login-form" style="display:none;">
-    <div style="text-align:center;margin-bottom:24px;">
-      <div style="font-size:11px;letter-spacing:0.3em;color:var(--muted);">NEW REGISTRATION</div>
+  <!-- ステップ2: ワンタイムコード入力 -->
+  <div id="otp-form-area" class="login-form" style="display:none;">
+    <div style="text-align:center;margin-bottom:8px;">
+      <div style="font-size:11px;letter-spacing:0.3em;color:var(--text-sub);">ENTER CODE</div>
+      <div id="otp-sent-to" style="font-size:13px;color:var(--text-body);margin-top:10px;line-height:1.8;"></div>
     </div>
-    <div style="margin-bottom:16px;">
-      <div style="font-size:10px;letter-spacing:0.3em;color:var(--gold);margin-bottom:10px;">参加の種別を選んでください</div>
+    <input type="text" class="login-input" id="login-otp" placeholder="メールに届いた6桁コード" inputmode="numeric" autocomplete="one-time-code" style="text-align:center;letter-spacing:0.3em;" />
+    <div class="login-error" id="otp-error"></div>
+    <button class="login-btn" onclick="handleVerifyOtp()">確認して入る</button>
+    <div style="text-align:center;margin-top:8px;">
+      <button class="link-btn" onclick="showEmailStep()">← メールアドレスを入力し直す</button>
+    </div>
+  </div>
+
+  <!-- ステップ3: 初回のみ、プロフィール登録(実名なし) -->
+  <div id="profile-form-area" class="login-form" style="display:none;">
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="font-size:11px;letter-spacing:0.3em;color:var(--text-sub);">NEW REGISTRATION</div>
+      <div style="font-size:13px;color:var(--text-body);margin-top:10px;line-height:1.8;">初めての方は、参加情報を登録してください。<br>実名は必要ありません。</div>
+    </div>
+    <div>
+      <div style="font-size:11.5px;letter-spacing:0.24em;color:var(--text-sub);margin-bottom:10px;">参加の種別</div>
       <div style="display:flex;gap:8px;">
-        <button id="role-participant" onclick="selectRegisterRole('participant')" style="flex:1;padding:12px;border:1px solid rgba(200,191,170,0.2);border-radius:3px;background:none;color:rgba(245,240,232,0.6);font-size:12px;cursor:pointer;transition:all 0.2s;letter-spacing:0.05em;">参加者</button>
-        <button id="role-supporter" onclick="selectRegisterRole('supporter')" style="flex:1;padding:12px;border:1px solid rgba(200,191,170,0.2);border-radius:3px;background:none;color:rgba(245,240,232,0.6);font-size:12px;cursor:pointer;transition:all 0.2s;letter-spacing:0.05em;">支援者</button>
+        <button id="role-participant" class="role-btn" onclick="selectRegisterRole('participant')">参加者</button>
+        <button id="role-supporter" class="role-btn" onclick="selectRegisterRole('supporter')">支援者</button>
       </div>
     </div>
-    <input type="text" class="login-input" id="reg-nickname" placeholder="ニックネーム" />
-    <input type="email" class="login-input" id="reg-email" placeholder="メールアドレス" />
-    <select class="login-input" id="reg-prefecture" style="cursor:pointer;"><option value="">都道府県</option><option>北海道</option><option>青森県</option><option>岩手県</option><option>宮城県</option><option>秋田県</option><option>山形県</option><option>福島県</option><option>茨城県</option><option>栃木県</option><option>群馬県</option><option>埼玉県</option><option>千葉県</option><option>東京都</option><option>神奈川県</option><option>新潟県</option><option>富山県</option><option>石川県</option><option>福井県</option><option>山梨県</option><option>長野県</option><option>岐阜県</option><option>静岡県</option><option>愛知県</option><option>三重県</option><option>滋賀県</option><option>京都府</option><option>大阪府</option><option>兵庫県</option><option>奈良県</option><option>和歌山県</option><option>鳥取県</option><option>島根県</option><option>岡山県</option><option>広島県</option><option>山口県</option><option>徳島県</option><option>香川県</option><option>愛媛県</option><option>高知県</option><option>福岡県</option><option>佐賀県</option><option>長崎県</option><option>熊本県</option><option>大分県</option><option>宮崎県</option><option>鹿児島県</option><option>沖縄県</option><option>海外</option></select>
+    <input type="text" class="login-input" id="reg-nickname" placeholder="ニックネーム（実名以外で）" />
+    <select class="login-input" id="reg-prefecture" style="cursor:pointer;"><option value="">都道府県（任意）</option><option>北海道</option><option>青森県</option><option>岩手県</option><option>宮城県</option><option>秋田県</option><option>山形県</option><option>福島県</option><option>茨城県</option><option>栃木県</option><option>群馬県</option><option>埼玉県</option><option>千葉県</option><option>東京都</option><option>神奈川県</option><option>新潟県</option><option>富山県</option><option>石川県</option><option>福井県</option><option>山梨県</option><option>長野県</option><option>岐阜県</option><option>静岡県</option><option>愛知県</option><option>三重県</option><option>滋賀県</option><option>京都府</option><option>大阪府</option><option>兵庫県</option><option>奈良県</option><option>和歌山県</option><option>鳥取県</option><option>島根県</option><option>岡山県</option><option>広島県</option><option>山口県</option><option>徳島県</option><option>香川県</option><option>愛媛県</option><option>高知県</option><option>福岡県</option><option>佐賀県</option><option>長崎県</option><option>熊本県</option><option>大分県</option><option>宮崎県</option><option>鹿児島県</option><option>沖縄県</option><option>海外</option></select>
     <div class="login-error" id="reg-error"></div>
-    <button class="login-btn" onclick="handleRegister()">登録して入る</button>
-    <div style="text-align:center;margin-top:16px;">
-      <button onclick="showLogin()" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;letter-spacing:0.05em;">← コードでログイン</button>
+    <button class="login-btn" onclick="handleCreateProfile()">登録して入る</button>
+  </div>
+
+  <!-- 登録完了: 仮名コードの表示 -->
+  <div id="code-issued-area" class="login-form" style="display:none;">
+    <div style="text-align:center;padding:8px 0;">
+      <div style="font-size:32px;background:var(--accent-grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;margin-bottom:12px;">✦</div>
+      <div style="font-family:'Shippori Mincho',serif;font-size:20px;font-weight:700;color:var(--text-main);margin-bottom:8px;">登録完了</div>
+      <div style="font-size:13px;color:var(--text-sub);margin-bottom:20px;line-height:1.8;">あなたの参加コードです。<br>アプリ内での表示名として使われます。</div>
+      <div style="background:var(--bg-input);border:1px solid var(--border-input);border-radius:10px;padding:18px;margin-bottom:20px;">
+        <div style="font-size:11px;letter-spacing:0.3em;color:var(--text-sub);margin-bottom:6px;">YOUR CODE</div>
+        <div id="issued-code" style="font-family:'Shippori Mincho',serif;font-size:30px;font-weight:700;color:var(--text-main);"></div>
+      </div>
+      <button class="login-btn" onclick="showMain()" style="max-width:220px;margin:0 auto;">入る</button>
     </div>
   </div>
 
-  <div style="margin-top:40px;text-align:center;font-size:11px;letter-spacing:0.05em;">
+  <div style="margin-top:40px;text-align:center;font-size:12.5px;letter-spacing:0.05em;line-height:2;">
     <a href="privacy.html" style="color:var(--text-sub);text-decoration:underline;">プライバシーポリシー</a>
     <span style="color:var(--border-input);margin:0 8px;">／</span>
     <a href="security.html" style="color:var(--text-sub);text-decoration:underline;">セキュリティポリシー</a>
@@ -960,256 +1090,162 @@ const SUPABASE_KEY = 'sb_publishable_v8VIXxgZIhwF3C6DxWOFgw_slxtWIEc';
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// パスワード設定
-const PASSWORDS = {
-  'kakusei-director': 'director',
-  'kakusei-supporter': 'supporter',
-};
-// 参加者はコードで照合（P001など）
-
-let currentRole = null;
-let currentParticipant = null;
+let myProfile = null;        // 自分の profiles 行(認証後に取得)
+let pendingEmail = '';
+let registerRole = null;
 let actionSelected = null;
 let transformSelected = null;
 
-
-// 登録フォーム表示切替
-function showRegister() {
-  document.getElementById('login-form-area').style.display = 'none';
-  document.getElementById('forgot-form-area').style.display = 'none';
-  document.getElementById('register-form-area').style.display = 'flex';
-  document.getElementById('register-form-area').style.flexDirection = 'column';
-  document.getElementById('register-form-area').style.gap = '16px';
+// ---------- XSS対策: ユーザー由来文字列は必ずこれを通す ----------
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
 }
 
-function showLogin() {
-  document.getElementById('register-form-area').style.display = 'none';
-  document.getElementById('forgot-form-area').style.display = 'none';
-  document.getElementById('login-form-area').style.display = 'flex';
-  document.getElementById('login-form-area').style.flexDirection = 'column';
-  document.getElementById('login-form-area').style.gap = '16px';
+function fmtDate(d) {
+  if (!d) return '-';
+  return new Date(d).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-// コード再通知フォーム表示切替
-function showForgot() {
-  document.getElementById('login-form-area').style.display = 'none';
-  document.getElementById('register-form-area').style.display = 'none';
-  const f = document.getElementById('forgot-form-area');
-  f.style.display = 'flex';
-  f.style.flexDirection = 'column';
-  f.style.gap = '16px';
-  document.getElementById('forgot-msg').textContent = '';
+// ---------- ログイン画面のステップ切替 ----------
+const LOGIN_STEPS = ['email-form-area', 'otp-form-area', 'profile-form-area', 'code-issued-area'];
+function showOnly(id) {
+  LOGIN_STEPS.forEach(x => {
+    document.getElementById(x).style.display = x === id ? 'flex' : 'none';
+  });
+}
+function showEmailStep() {
+  document.getElementById('otp-error').textContent = '';
+  document.getElementById('login-otp').value = '';
+  showOnly('email-form-area');
 }
 
-// コード再通知の依頼受付（メール自動送信は準備中のため、運営へ導線）
-function handleForgotCode() {
-  const email = document.getElementById('forgot-email').value.trim();
-  const msg = document.getElementById('forgot-msg');
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  if (!emailOk) {
-    msg.style.color = 'var(--red)';
-    msg.textContent = '正しいメールアドレスを入力してください';
+// ---------- ステップ1: メールにワンタイムコードを送る ----------
+async function handleSendOtp() {
+  const email = document.getElementById('login-email').value.trim();
+  const errEl = document.getElementById('email-error');
+  errEl.textContent = '';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = '正しいメールアドレスを入力してください';
     return;
   }
-  msg.style.color = 'var(--text-sub)';
-  msg.innerHTML = '再通知のご依頼を受け付けました。メールでの自動送信は現在準備中のため、運営が確認のうえご連絡いたします。<br>お急ぎの場合は<a href="https://docs.google.com/forms/d/e/1FAIpQLSfk-UokJFdVNs6_naA9SyXKo43fbirwwcEIEBaDKLQrX0tBog/viewform" target="_blank" rel="noopener" style="color:#e07a55;">お問い合わせフォーム</a>からご連絡ください。';
+  const btn = document.getElementById('send-otp-btn');
+  btn.disabled = true;
+  const { error } = await db.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+  btn.disabled = false;
+  if (error) {
+    errEl.textContent = '送信できませんでした。少し時間をおいてお試しください。';
+    return;
+  }
+  pendingEmail = email;
+  document.getElementById('otp-sent-to').textContent = email + ' 宛にログインコードを送りました。';
+  showOnly('otp-form-area');
+  document.getElementById('login-otp').focus();
 }
 
-let registerRole = null;
+// ---------- ステップ2: コード検証 ----------
+async function handleVerifyOtp() {
+  const token = document.getElementById('login-otp').value.trim();
+  const errEl = document.getElementById('otp-error');
+  errEl.textContent = '';
+  if (!token) { errEl.textContent = 'コードを入力してください'; return; }
+  const { error } = await db.auth.verifyOtp({ email: pendingEmail, token, type: 'email' });
+  if (error) { errEl.textContent = 'コードが正しくないか、期限切れです。'; return; }
+  await afterAuth();
+}
 
+// ---------- 認証後: プロフィール有無で分岐 ----------
+async function afterAuth() {
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) return;
+  const { data: profile } = await db.from('profiles')
+    .select('id, role, code, nickname, prefecture, current_stage, is_active, program_id')
+    .eq('id', user.id)
+    .maybeSingle();
+  if (profile) {
+    myProfile = profile;
+    showMain();
+  } else {
+    showOnly('profile-form-area');
+  }
+}
+
+// ---------- ステップ3: 初回プロフィール登録(実名なし) ----------
 function selectRegisterRole(role) {
   registerRole = role;
-  const pBtn = document.getElementById('role-participant');
-  const sBtn = document.getElementById('role-supporter');
-  if (role === 'participant') {
-    pBtn.style.borderColor = 'var(--gold)';
-    pBtn.style.color = 'var(--gold)';
-    pBtn.style.background = 'rgba(184,134,11,0.08)';
-    sBtn.style.borderColor = 'rgba(200,191,170,0.2)';
-    sBtn.style.color = 'rgba(245,240,232,0.6)';
-    sBtn.style.background = 'none';
-  } else {
-    sBtn.style.borderColor = 'var(--gold)';
-    sBtn.style.color = 'var(--gold)';
-    sBtn.style.background = 'rgba(184,134,11,0.08)';
-    pBtn.style.borderColor = 'rgba(200,191,170,0.2)';
-    pBtn.style.color = 'rgba(245,240,232,0.6)';
-    pBtn.style.background = 'none';
-  }
+  document.getElementById('role-participant').classList.toggle('selected', role === 'participant');
+  document.getElementById('role-supporter').classList.toggle('selected', role === 'supporter');
 }
 
-async function handleRegister() {
+async function handleCreateProfile() {
   const errEl = document.getElementById('reg-error');
-  const nickname = document.getElementById('reg-nickname').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
   errEl.textContent = '';
-
+  const nickname = document.getElementById('reg-nickname').value.trim();
   if (!registerRole) { errEl.textContent = '参加の種別を選んでください'; return; }
   if (!nickname) { errEl.textContent = 'ニックネームを入力してください'; return; }
-  if (!email) { errEl.textContent = 'メールアドレスを入力してください'; return; }
 
-  // プログラムIDを取得
-  const programName = registerRole === 'participant' ? '覚醒モデル研究参加者' : '覚醒モデル研究支援者';
-  const { data: program } = await db.from('programs').select('id').eq('name', programName).single();
-
-  if (!program) {
-    // プログラムが存在しない場合は作成
-    const type = registerRole === 'participant' ? '研究参加' : '研究支援';
-    const { data: newProgram } = await db.from('programs').insert({
-      name: programName, type, location: '全国'
-    }).select().single();
-
-    if (!newProgram) { errEl.textContent = 'エラーが発生しました'; return; }
-
-    const code = await generateCode(newProgram.id);
-    await createParticipant(newProgram.id, code, nickname, email, registerRole);
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) {
+    errEl.textContent = 'セッションが切れました。もう一度ログインしてください。';
+    showEmailStep();
     return;
   }
 
-  const code = await generateCode(program.id);
-  await createParticipant(program.id, code, nickname, email, registerRole);
-}
-
-async function generateCode(programId) {
-  const { count } = await db.from('participants').select('*', { count: 'exact', head: true }).eq('program_id', programId);
-  return 'U' + String((count || 0) + 1).padStart(3, '0');
-}
-
-async function createParticipant(programId, code, nickname, email, role) {
-  const errEl = document.getElementById('reg-error');
-  const { data, error } = await db.from('participants').insert({
-    program_id: programId,
-    code,
+  const { data, error } = await db.from('profiles').insert({
+    id: user.id,
+    role: registerRole,
     nickname,
-    supporter_note: email,
-    prefecture: (document.getElementById("reg-prefecture") || {}).value || null,
-    joined_at: new Date().toISOString().split('T')[0],
-    current_stage: 1,
-    is_active: true
+    prefecture: document.getElementById('reg-prefecture').value || null,
   }).select().single();
 
   if (error || !data) {
-    errEl.textContent = 'エラーが発生しました。もう一度お試しください。';
+    errEl.textContent = '登録できませんでした。もう一度お試しください。';
     return;
   }
-
-  // 登録完了後、自動ログイン
-  if (role === 'participant') {
-    currentRole = 'participant';
-    currentParticipant = data;
-  } else {
-    currentRole = 'supporter';
-  }
-
-  // グローバルに保存してからコード表示
-  currentRole = role;
-  if (role === 'participant') currentParticipant = data;
-
-  document.getElementById('register-form-area').innerHTML = `
-    <div style="text-align:center;padding:24px 0;">
-      <div style="font-size:32px;color:var(--gold);margin-bottom:12px;">✦</div>
-      <div style="font-family:'Shippori Mincho',serif;font-size:20px;font-weight:700;color:var(--gold);margin-bottom:8px;">登録完了</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">あなたのコードを必ず保存してください</div>
-      <div style="background:rgba(184,134,11,0.1);border:1px solid rgba(184,134,11,0.3);border-radius:4px;padding:16px;margin-bottom:20px;">
-        <div style="font-size:10px;letter-spacing:0.3em;color:var(--gold);margin-bottom:6px;">YOUR CODE</div>
-        <div style="font-family:'Shippori Mincho',serif;font-size:28px;font-weight:700;color:var(--paper);">${code}</div>
-      </div>
-      <button class="login-btn" onclick="showMain()" style="max-width:200px;margin:0 auto;">入る</button>
-    </div>
-  `;
+  myProfile = data;
+  document.getElementById('issued-code').textContent = data.code || '(発行待ち)';
+  showOnly('code-issued-area');
 }
 
-// ログイン
-async function handleLogin() {
-  const code = document.getElementById('login-code').value.trim();
-  const errEl = document.getElementById('login-error');
-  errEl.textContent = '';
-
-  if (!code) { errEl.textContent = 'コードを入力してください'; return; }
-
-  if (code === 'director2026') {
-    currentRole = 'director';
-    showMain();
-    return;
-  }
-  if (code === 'supporter2026') {
-    currentRole = 'supporter';
-    showMain();
-    return;
-  }
-
-  // テストコード：TEST または TEST1〜TEST7（数字＝ステージ）。DBに接続せず参加者画面を確認できる
-  const testMatch = code.toUpperCase().match(/^TEST([1-7])?$/);
-  if (testMatch) {
-    currentRole = 'participant';
-    currentParticipant = { id: null, code: 'TEST', nickname: 'テスト', current_stage: parseInt(testMatch[1] || '1', 10) };
-    showMain();
-    return;
-  }
-
-  // 参加者コードで照合
-  const { data, error } = await db.from('participants').select('*').eq('code', code.toUpperCase()).eq('is_active', true).single();
-  if (data) {
-    currentRole = 'participant';
-    currentParticipant = data;
-    showMain();
-    return;
-  }
-
-  errEl.textContent = 'コードが正しくありません';
-}
-
-document.getElementById('login-code').addEventListener('keydown', e => {
-  if (e.key === 'Enter') handleLogin();
-});
-
-
-function enterApp(role, participantData) {
-  currentRole = role;
-  if (role === 'participant') {
-    currentParticipant = participantData;
-  }
-  showMain();
-}
-
+// ---------- メイン画面 ----------
 function showMain() {
   document.getElementById('login-screen').style.display = 'none';
-  const main = document.getElementById('main-screen');
-  main.style.display = 'flex';
+  document.getElementById('main-screen').style.display = 'flex';
 
   const roleLabels = { director: 'DIRECTOR', supporter: 'SUPPORTER', participant: 'PARTICIPANT' };
-  document.getElementById('role-label').textContent = roleLabels[currentRole];
+  document.getElementById('role-label').textContent = roleLabels[myProfile.role] || '';
 
-  if (currentRole === 'director') {
+  if (myProfile.role === 'director') {
     document.getElementById('director-view').style.display = 'block';
     loadDirectorData();
-  } else if (currentRole === 'supporter') {
+  } else if (myProfile.role === 'supporter') {
     document.getElementById('supporter-view').style.display = 'block';
-    document.getElementById('alert-needed').addEventListener('change', function() {
-      document.getElementById('alert-reason-group').style.display = this.checked ? 'block' : 'none';
-    });
   } else {
     document.getElementById('participant-view').style.display = 'block';
     renderParticipantForm();
   }
 }
 
-function handleLogout() {
-  currentRole = null;
-  currentParticipant = null;
-  document.getElementById('login-screen').style.display = 'flex';
+async function handleLogout() {
+  await db.auth.signOut();
+  myProfile = null;
+  registerRole = null;
+  pendingEmail = '';
   document.getElementById('main-screen').style.display = 'none';
-  document.getElementById('login-code').value = '';
-  document.getElementById('director-view').style.display = 'none';
-  document.getElementById('supporter-view').style.display = 'none';
-  document.getElementById('participant-view').style.display = 'none';
+  ['director-view', 'supporter-view', 'participant-view'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-email').value = '';
+  showEmailStep();
 }
 
-// ========== 参加者フォーム ==========
+// ========== 七段階(非交渉: 名称・順序を変更しない) ==========
 const stageNames = ['', '封鎖状態', '信頼の構築', '潜在意識の顕在化', '主体の回復', '小さな挑戦', '障害の突破', '場の創造と還元'];
 const stageKanji = ['', '一', '二', '三', '四', '五', '六', '七'];
 
-// 成長フェーズの定義（支援者・ディレクター画面の参照用）
+// 成長フェーズの定義(支援者・ディレクター画面の参照用)
 const stageDefinitions = [
   { num: '一', name: '封鎖状態', def: '動けない、動き方がわからない状態。心が閉じており、行動のエネルギーが封じられている段階。' },
   { num: '二', name: '信頼の構築', def: '安心して話せる関係が生まれはじめる段階。この場で正直に話せることが変化のサイン。' },
@@ -1221,6 +1257,7 @@ const stageDefinitions = [
 ];
 
 function renderStageGuide() {
+  // 定数のみで構成(ユーザー入力を含まないため innerHTML 可)
   const html = `
     <details class="stage-guide">
       <summary>成長フェーズの定義（ステージ一〜七）</summary>
@@ -1242,14 +1279,22 @@ function renderStageGuide() {
 
 renderStageGuide();
 
+// ========== 参加者フォーム ==========
+const selectedValues = {};
+const relatedPersons = new Set();
+
 function renderParticipantForm() {
-  const stage = currentParticipant.current_stage;
+  // 前回の選択状態をリセット
+  Object.keys(selectedValues).forEach(k => delete selectedValues[k]);
+  relatedPersons.clear();
+
+  const stage = myProfile.current_stage;
   const area = document.getElementById('participant-form-area');
 
   area.innerHTML = `
-    <div style="background:rgba(184,134,11,0.06);border:1px solid rgba(184,134,11,0.15);border-radius:4px;padding:20px 24px;margin-bottom:28px;animation:fadeIn 0.6s ease;">
-      <div style="font-size:9px;letter-spacing:0.4em;color:var(--gold);margin-bottom:10px;">ABOUT THIS APP</div>
-      <p style="font-family:'Shippori Mincho',serif;font-size:14px;color:rgba(245,240,232,0.8);line-height:2;letter-spacing:0.05em;">
+    <div style="background:var(--bg-panel);border:1px solid var(--border-soft);border-radius:12px;padding:20px 24px;margin-bottom:28px;animation:fadeIn 0.6s ease;">
+      <div style="font-size:11px;letter-spacing:0.28em;color:var(--text-sub);margin-bottom:10px;">ABOUT THIS APP</div>
+      <p style="font-family:'Shippori Mincho',serif;font-size:15px;color:var(--text-body);line-height:2;letter-spacing:0.05em;">
         このアプリは、あなたの成長と自己効力感を記録するためのものです。<br>
         何かアクションを起こした時、その時の気持ちをひとこと入力してください。
       </p>
@@ -1260,7 +1305,7 @@ function renderParticipantForm() {
     </div>
     ${getQuestionsHTML(stage)}
     <button class="submit-btn" onclick="submitEvent()">記録する</button>
-    <div id="participant-msg" style="text-align:center;font-size:12px;margin-top:12px;min-height:18px;color:var(--muted);"></div>
+    <div id="participant-msg" style="text-align:center;font-size:13px;margin-top:12px;min-height:18px;color:var(--text-sub);"></div>
   `;
 }
 
@@ -1282,7 +1327,7 @@ function getQuestionsHTML(stage) {
         <div class="q-label">Q1</div>
         <div class="q-text">${q1Labels[stage]}</div>
         <div class="options" id="q1-options">
-          ${q1Options[stage].map((o, i) => `<button class="option-btn" onclick="selectOption(this, 'q1', ${i+1})">${o}</button>`).join('')}
+          ${q1Options[stage].map((o, i) => `<button class="option-btn" onclick="selectOption(this, 'q1', ${i + 1})">${o}</button>`).join('')}
         </div>
       </div>
       <div class="q-card">
@@ -1332,7 +1377,7 @@ function getQuestionsHTML(stage) {
       <textarea class="free-input" id="action-text" placeholder="ひとことでいい"></textarea>
       <div style="margin-top:16px;">
         <div class="q-label" style="margin-bottom:10px;">Q3 — 感触</div>
-        <div class="q-text" style="font-size:14px;margin-bottom:12px;">やってみてどうでしたか？</div>
+        <div class="q-text" style="font-size:15px;margin-bottom:12px;">やってみてどうでしたか？</div>
         <div class="options">
           <button class="option-btn" onclick="selectOption(this,'feeling',1)">① 思ったよりできた</button>
           <button class="option-btn" onclick="selectOption(this,'feeling',2)">② 思ったより難しかった</button>
@@ -1363,7 +1408,7 @@ function getQuestionsHTML(stage) {
       <textarea class="free-input" id="obstacle-text" placeholder="ひとことでいい"></textarea>
       <div style="margin-top:16px;">
         <div class="q-label" style="margin-bottom:10px;">Q3 — 対処</div>
-        <div class="q-text" style="font-size:14px;margin-bottom:12px;">その時、自分はどうしましたか？</div>
+        <div class="q-text" style="font-size:15px;margin-bottom:12px;">その時、自分はどうしましたか？</div>
         <div class="options">
           <button class="option-btn" onclick="selectOption(this,'coping',1)">① 誰かに話した</button>
           <button class="option-btn" onclick="selectOption(this,'coping',2)">② 自分で考え続けた</button>
@@ -1373,7 +1418,7 @@ function getQuestionsHTML(stage) {
       </div>
       <div id="can-talk-group" style="display:none;margin-top:16px;">
         <div class="q-label" style="margin-bottom:10px;">Q4 — サポート確認</div>
-        <div class="q-text" style="font-size:14px;margin-bottom:12px;">今、誰かに話せそうですか？</div>
+        <div class="q-text" style="font-size:15px;margin-bottom:12px;">今、誰かに話せそうですか？</div>
         <div class="options">
           <button class="option-btn" onclick="selectOption(this,'can-talk',1)">① はい</button>
           <button class="option-btn" onclick="selectOption(this,'can-talk',2)">② まだ難しい</button>
@@ -1398,7 +1443,7 @@ function getQuestionsHTML(stage) {
       <textarea class="free-input" id="giving-text" placeholder="ひとことでいい"></textarea>
       <div style="margin-top:16px;">
         <div class="q-label" style="margin-bottom:10px;">Q3 — 感触</div>
-        <div class="q-text" style="font-size:14px;margin-bottom:12px;">その時、どんな気持ちでしたか？</div>
+        <div class="q-text" style="font-size:15px;margin-bottom:12px;">その時、どんな気持ちでしたか？</div>
         <div class="options">
           <button class="option-btn" onclick="selectOption(this,'giving-feeling',1)">① 自分がやるべきことをやった感じ</button>
           <button class="option-btn" onclick="selectOption(this,'giving-feeling',2)">② 誰かの役に立てた感じ</button>
@@ -1407,16 +1452,12 @@ function getQuestionsHTML(stage) {
       </div>
       <div style="margin-top:16px;">
         <div class="q-label" style="margin-bottom:10px;">Q4 — 次の一歩</div>
-        <div class="q-text" style="font-size:14px;margin-bottom:12px;">次に誰かに渡したいものは何かありますか？</div>
+        <div class="q-text" style="font-size:15px;margin-bottom:12px;">次に誰かに渡したいものは何かありますか？</div>
         <textarea class="free-input" id="next-giving-text" placeholder="ひとことでいい"></textarea>
       </div>
     </div>
   `;
 }
-
-const selectedValues = {};
-
-const relatedPersons = new Set();
 
 function toggleRelated(btn, val) {
   if (relatedPersons.has(val)) {
@@ -1434,8 +1475,8 @@ function selectOption(btn, key, val) {
   btn.classList.add('selected');
   selectedValues[key] = val;
 
-  // Q3表示制御（ステージ3・4）
-  const stage = currentParticipant?.current_stage;
+  // Q3表示制御(ステージ3・4)
+  const stage = myProfile?.current_stage;
   if (key === 'q1' && (stage === 3 || stage === 4)) {
     const branch = document.getElementById('branch-card');
     if (branch) branch.style.display = val === 3 ? 'block' : 'none';
@@ -1462,12 +1503,12 @@ function selectToggle(key, val) {
 
 // 参加者の記録送信
 async function submitEvent() {
-  const stage = currentParticipant.current_stage;
+  const stage = myProfile.current_stage;
   const msg = document.getElementById('participant-msg');
   msg.textContent = '送信中...';
 
   const payload = {
-    participant_id: currentParticipant.id,
+    participant_id: myProfile.id,
     stage,
     status_choice: selectedValues['q1'] || null,
     main_text: document.getElementById('main-text')?.value || null,
@@ -1482,27 +1523,25 @@ async function submitEvent() {
     giving_text: document.getElementById('giving-text')?.value || null,
     giving_feeling: selectedValues['giving-feeling'] || null,
     next_giving_text: document.getElementById('next-giving-text')?.value || null,
+    related_persons: relatedPersons.size > 0 ? [...relatedPersons] : null,
+    body_state: document.getElementById('body-state')?.value || null,
   };
 
-  // テストコードでのログイン時は保存せずフィードバック表示のみ
-  if (currentParticipant.id) {
-    const { error } = await db.from('events').insert(payload);
-
-    if (error) {
-      msg.textContent = 'エラーが発生しました。もう一度お試しください。';
-      msg.style.color = 'var(--red)';
-      return;
-    }
+  const { error } = await db.from('events').insert(payload);
+  if (error) {
+    msg.textContent = 'エラーが発生しました。もう一度お試しください。';
+    msg.style.color = 'var(--red)';
+    return;
   }
 
-  // AIフィードバック生成
-  const feedback = generateFeedback(stage, selectedValues, payload);
+  const feedback = generateFeedback(stage, selectedValues);
 
+  // feedback は定数テキストのみ(ユーザー入力を含まない)
   document.getElementById('participant-form-area').innerHTML = `
     <div class="success-msg">
       <div class="check">✦</div>
       <h3>記録しました</h3>
-      <p>${currentParticipant.id ? 'あなたの記録が、REVERA01のデータになりました。' : 'テストコードのため、記録は保存されていません。'}</p>
+      <p>あなたの記録が、REVERA01のデータになりました。</p>
       <div class="ai-feedback">
         <div class="ai-label">REVERA AGENT</div>
         <p>${feedback}</p>
@@ -1512,7 +1551,7 @@ async function submitEvent() {
   `;
 }
 
-function generateFeedback(stage, vals, payload) {
+function generateFeedback(stage, vals) {
   const q1 = vals['q1'];
   const stageTexts = {
     1: q1 === 1 ? '動きたいという気持ちがある。それだけで十分です。その気持ちの先に、何がありますか？' : q1 === 2 ? 'そのままでいいです。動けないと感じている時、あなたの心の中に何がありますか？' : q1 === 4 ? '動けた実感がある。その感覚こそが、次の一歩の土台になります。何があなたを動かしましたか？' : '動き方がわからない。それは正直な状態です。まず、何が一番気になっていますか？',
@@ -1526,16 +1565,20 @@ function generateFeedback(stage, vals, payload) {
   return stageTexts[stage] || 'あなたの記録を受け取りました。';
 }
 
-// 支援者の観察送信
+// ========== 支援者の観察送信 ==========
 async function submitObservation() {
   const msgEl = document.getElementById('supporter-msg');
   msgEl.textContent = '送信中...';
-  msgEl.style.color = 'var(--muted)';
+  msgEl.style.color = 'var(--text-sub)';
 
   const code = document.getElementById('obs-participant-code').value.trim().toUpperCase();
   if (!code) { msgEl.textContent = '参加者コードを入力してください'; msgEl.style.color = 'var(--red)'; return; }
 
-  const { data: participant } = await db.from('participants').select('id').eq('code', code).single();
+  const { data: participant } = await db.from('profiles')
+    .select('id')
+    .eq('code', code)
+    .eq('role', 'participant')
+    .maybeSingle();
   if (!participant) { msgEl.textContent = '参加者が見つかりません'; msgEl.style.color = 'var(--red)'; return; }
 
   const selectedEmotions = [...document.querySelectorAll('.emotion-tag.selected')].map(el => el.textContent);
@@ -1545,7 +1588,7 @@ async function submitObservation() {
 
   const payload = {
     participant_id: participant.id,
-    supporter_id: 'supporter',
+    supporter_id: myProfile.id,
     supporter_utterance: document.getElementById('obs-utterance').value || null,
     participant_response: document.getElementById('obs-response').value || null,
     stage_before: stageBefore,
@@ -1561,7 +1604,6 @@ async function submitObservation() {
   };
 
   const { error } = await db.from('observations').insert(payload);
-
   if (error) {
     msgEl.textContent = 'エラーが発生しました';
     msgEl.style.color = 'var(--red)';
@@ -1569,9 +1611,8 @@ async function submitObservation() {
   }
 
   msgEl.textContent = '✦ 記録を保存しました';
-  msgEl.style.color = 'var(--gold)';
+  msgEl.style.color = '#e07a55';
 
-  // フォームリセット
   setTimeout(() => {
     document.getElementById('obs-participant-code').value = '';
     document.getElementById('obs-utterance').value = '';
@@ -1589,89 +1630,80 @@ async function submitObservation() {
   }, 2000);
 }
 
-// ディレクター画面
+// ========== ディレクター画面 ==========
+function truncate(s, n) {
+  const t = String(s ?? '');
+  return t.length > n ? t.slice(0, n) + '…' : t;
+}
+
+function emptyRow(colspan, text) {
+  return `<tr><td colspan="${colspan}" style="text-align:center;color:var(--text-sub);padding:24px;">${text}</td></tr>`;
+}
+
 async function loadDirectorData() {
-  const [
-    { count: programCount },
-    { count: participantCount },
-    { count: eventCount },
-    { data: recentEvents },
-    { data: participants },
-    { data: alerts },
-    { data: triggers }
-  ] = await Promise.all([
-    db.from('programs').select('*', { count: 'exact', head: true }),
-    db.from('participants').select('*', { count: 'exact', head: true }),
+  const [progRes, profRes, evCountRes, evRes, alertRes, trigRes] = await Promise.all([
+    db.from('programs').select('id, name'),
+    db.from('profiles').select('id, code, nickname, role, current_stage, is_active, program_id, created_at').order('created_at', { ascending: false }),
     db.from('events').select('*', { count: 'exact', head: true }),
     db.from('events').select('id, stage, recorded_at, participant_id').order('recorded_at', { ascending: false }).limit(10),
-    db.from('participants').select('code, nickname, current_stage, is_active, program_id').order('created_at', { ascending: false }),
-    db.from('observations').select('*').eq('alert_needed', true).order('observed_at', { ascending: false }),
-    db.from('observations').select('*').eq('transform_flag', true).order('observed_at', { ascending: false }).limit(20),
+    db.from('observations').select('participant_id, supporter_id, alert_reason, observed_at').eq('alert_needed', true).order('observed_at', { ascending: false }),
+    db.from('observations').select('participant_id, supporter_utterance, participant_response, emotion_tags').eq('transform_flag', true).order('observed_at', { ascending: false }).limit(20),
   ]);
 
-  document.getElementById('stat-programs').textContent = programCount || 0;
-  document.getElementById('stat-participants').textContent = participantCount || 0;
-  document.getElementById('stat-events').textContent = eventCount || 0;
+  const programs = progRes.data || [];
+  const profiles = profRes.data || [];
+  const codeById = {};
+  const programNameById = {};
+  profiles.forEach(p => { codeById[p.id] = p.code || '-'; });
+  programs.forEach(p => { programNameById[p.id] = p.name || '-'; });
+  const participants = profiles.filter(p => p.role === 'participant');
 
-  // 最近の記録
-  const recentTbody = document.getElementById('recent-events');
-  if (recentEvents?.length) {
-    recentTbody.innerHTML = recentEvents.map(e => `
-      <tr>
-        <td>${e.participant_id?.slice(0,8)}...</td>
-        <td><span class="stage-pill stage-c${e.stage}">${stageKanji[e.stage]} ${stageNames[e.stage]}</span></td>
-        <td>${new Date(e.recorded_at).toLocaleString('ja-JP', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
-      </tr>
-    `).join('');
-  } else {
-    recentTbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:24px;">記録がまだありません</td></tr>';
-  }
+  document.getElementById('stat-programs').textContent = programs.length;
+  document.getElementById('stat-participants').textContent = participants.length;
+  document.getElementById('stat-events').textContent = evCountRes.count || 0;
+
+  // 最近の記録(participant_id → 参加者コード表示)
+  const recent = evRes.data || [];
+  document.getElementById('recent-events').innerHTML = recent.length ? recent.map(e => `
+    <tr>
+      <td>${esc(codeById[e.participant_id] || '-')}</td>
+      <td><span class="stage-pill stage-c${e.stage}">${stageKanji[e.stage] || ''} ${esc(stageNames[e.stage] || '')}</span></td>
+      <td>${fmtDate(e.recorded_at)}</td>
+    </tr>
+  `).join('') : emptyRow(3, '記録がまだありません');
 
   // 参加者一覧
-  const partTbody = document.getElementById('participants-list');
-  if (participants?.length) {
-    partTbody.innerHTML = participants.map(p => `
-      <tr>
-        <td>${p.code}</td>
-        <td>${p.nickname || '-'}</td>
-        <td>-</td>
-        <td><span class="stage-pill stage-c${p.current_stage}">${stageKanji[p.current_stage]} ${stageNames[p.current_stage]}</span></td>
-        <td style="color:${p.is_active ? 'var(--success)' : 'var(--muted)'};">${p.is_active ? '参加中' : '終了'}</td>
-      </tr>
-    `).join('');
-  } else {
-    partTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px;">参加者がまだいません</td></tr>';
-  }
+  document.getElementById('participants-list').innerHTML = participants.length ? participants.map(p => `
+    <tr>
+      <td>${esc(p.code || '-')}</td>
+      <td>${esc(p.nickname || '-')}</td>
+      <td>${esc(programNameById[p.program_id] || '-')}</td>
+      <td><span class="stage-pill stage-c${p.current_stage}">${stageKanji[p.current_stage] || ''} ${esc(stageNames[p.current_stage] || '')}</span></td>
+      <td style="color:${p.is_active ? 'var(--success)' : 'var(--text-sub)'};">${p.is_active ? '参加中' : '終了'}</td>
+    </tr>
+  `).join('') : emptyRow(5, '参加者がまだいません');
 
-  // アラート
-  const alertTbody = document.getElementById('alerts-list');
-  if (alerts?.length) {
-    alertTbody.innerHTML = alerts.map(a => `
-      <tr>
-        <td><span class="alert-dot"></span>${a.participant_id?.slice(0,8)}...</td>
-        <td>${a.alert_reason || '-'}</td>
-        <td>${new Date(a.observed_at).toLocaleString('ja-JP', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
-        <td>${a.supporter_id}</td>
-      </tr>
-    `).join('');
-  } else {
-    alertTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px;">アラートはありません</td></tr>';
-  }
+  // アラート(supporter も仮名コード表示)
+  const alerts = alertRes.data || [];
+  document.getElementById('alerts-list').innerHTML = alerts.length ? alerts.map(a => `
+    <tr>
+      <td><span class="alert-dot"></span>${esc(codeById[a.participant_id] || '-')}</td>
+      <td>${esc(a.alert_reason || '-')}</td>
+      <td>${fmtDate(a.observed_at)}</td>
+      <td>${esc(codeById[a.supporter_id] || '-')}</td>
+    </tr>
+  `).join('') : emptyRow(4, 'アラートはありません');
 
   // 変容トリガー
-  const triggerTbody = document.getElementById('triggers-list');
-  if (triggers?.length) {
-    triggerTbody.innerHTML = triggers.map(t => `
-      <tr>
-        <td>${t.participant_id?.slice(0,8)}...</td>
-        <td style="max-width:200px;">${t.supporter_utterance?.slice(0,40) || '-'}${t.supporter_utterance?.length > 40 ? '...' : ''}</td>
-        <td style="max-width:200px;">${t.participant_response?.slice(0,40) || '-'}${t.participant_response?.length > 40 ? '...' : ''}</td>
-        <td>${t.emotion_tags?.join('・') || '-'}</td>
-      </tr>
-    `).join('');
-  } else {
-    triggerTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px;">変容トリガーがまだありません</td></tr>';
-  }
+  const triggers = trigRes.data || [];
+  document.getElementById('triggers-list').innerHTML = triggers.length ? triggers.map(t => `
+    <tr>
+      <td>${esc(codeById[t.participant_id] || '-')}</td>
+      <td style="max-width:200px;">${esc(truncate(t.supporter_utterance || '-', 40))}</td>
+      <td style="max-width:200px;">${esc(truncate(t.participant_response || '-', 40))}</td>
+      <td>${esc(Array.isArray(t.emotion_tags) ? t.emotion_tags.join('・') : '-')}</td>
+    </tr>
+  `).join('') : emptyRow(4, '変容トリガーがまだありません');
 }
 
 function switchTab(tab) {
@@ -1684,6 +1716,23 @@ function switchTab(tab) {
     if (el) el.style.display = t === tab ? 'block' : 'none';
   });
 }
+
+// ========== 初期化 ==========
+document.getElementById('login-email').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleSendOtp();
+});
+document.getElementById('login-otp').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleVerifyOtp();
+});
+document.getElementById('alert-needed').addEventListener('change', function () {
+  document.getElementById('alert-reason-group').style.display = this.checked ? 'block' : 'none';
+});
+
+// セッションが残っていれば自動ログイン
+(async function init() {
+  const { data: { session } } = await db.auth.getSession();
+  if (session) await afterAuth();
+})();
 </script>
 </body>
 </html>
