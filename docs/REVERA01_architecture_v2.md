@@ -246,6 +246,15 @@ create policy programs_member_select on public.programs
 
 ## 7. Edge Functions(サーバ側特権処理)
 
+> **【改定 2026-07-15】Edge Functions 層は撤去(作らない)を決定。** Phase 1 実装の結果、当初の存在理由が消えたため:
+> - `recover-code`: 不要化。v1では参加者コードがログイン資格情報だったが、v2のログインはメールOTPであり、コードは仮名ラベルにすぎない。コードを忘れてもメールでログインすれば自分のプロフィールに表示される。
+> - `invite-participant`: 自己登録型の決定(§3)と、`profiles.program_id` の既定プログラム自動割当(migration 001)で代替済み。
+> - 残る特権処理は「director 昇格」のみで、ダッシュボード SQL で実施(手順: `docs/REVERA01_ops_director.md`)。
+>
+> これにより構成は「静的HTML + Supabase(Auth/RLS/トリガー)」の2層となり、service_role キーの配置・デプロイ用トークン・関数の保守が不要。秘匿値ゼロの原則がより強く守られる。将来、集計エクスポート等でサーバ側処理が必要になった時点で本節を再開する。
+>
+> 以下は撤去前の当初設計(参照用):
+
 クライアントに秘匿値を置かないための境界。`supabase/functions/` 想定。
 
 - `invite-participant`: ディレクター/支援者がスロット(コード)発行＋招待メール。service_role で `profiles` 作成。
@@ -306,6 +315,9 @@ create policy programs_member_select on public.programs
 2. 登録方式 = **自己登録型**(§3。director は自己登録不可、悪用対策セット付き)。
 3. 観察記録の可視範囲 = **参加者からは見えない**(閲覧は作成支援者本人＋同プログラムのディレクターのみ)。
 4. **TEST1〜7 デモモードは廃止**(§8)。
+
+**決定済み(2026-07-15)**
+5. **Edge Functions 層は撤去**(§7改定)。構成は「静的HTML + Supabase(Auth/RLS/トリガー)」の2層。director 昇格はダッシュボード SQL(`docs/REVERA01_ops_director.md`)。
 
 **残リスク**
 - **UX摩擦**: OTPログインは固定コードより一手間。→ セッション永続で緩和。実装後にUX確認。
