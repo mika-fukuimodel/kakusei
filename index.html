@@ -807,7 +807,8 @@ body {
 
         <div class="form-group">
           <div class="form-label">参加者コード</div>
-          <input type="text" class="free-input" id="obs-participant-code" placeholder="例：P001" style="min-height:unset;height:44px;resize:none;" />
+          <input type="text" class="free-input" id="obs-participant-code" placeholder="例：U001" style="min-height:unset;height:44px;resize:none;" />
+          <div style="font-size:11px;color:var(--text-sub);letter-spacing:0.03em;">参加者のコード（参加者＝U、支援者＝S。例：U001）</div>
         </div>
 
         <div class="form-group">
@@ -1048,6 +1049,9 @@ async function handleRegister() {
   if (!nickname) { errEl.textContent = 'ニックネームを入力してください'; return; }
   if (!email) { errEl.textContent = 'メールアドレスを入力してください'; return; }
 
+  // 役割別コードプレフィックス（参加者=U／支援者=S）。プログラム間の番号衝突を防ぎ、ログ上で役割を判別できる
+  const codePrefix = registerRole === 'participant' ? 'U' : 'S';
+
   // プログラムIDを取得
   const programName = registerRole === 'participant' ? '覚醒モデル研究参加者' : '覚醒モデル研究支援者';
   const { data: program } = await db.from('programs').select('id').eq('name', programName).single();
@@ -1061,18 +1065,18 @@ async function handleRegister() {
 
     if (!newProgram) { errEl.textContent = 'エラーが発生しました'; return; }
 
-    const code = await generateCode(newProgram.id);
+    const code = await generateCode(newProgram.id, codePrefix);
     await createParticipant(newProgram.id, code, nickname, email, registerRole);
     return;
   }
 
-  const code = await generateCode(program.id);
+  const code = await generateCode(program.id, codePrefix);
   await createParticipant(program.id, code, nickname, email, registerRole);
 }
 
-async function generateCode(programId) {
+async function generateCode(programId, prefix = 'U') {
   const { count } = await db.from('participants').select('*', { count: 'exact', head: true }).eq('program_id', programId);
-  return 'U' + String((count || 0) + 1).padStart(3, '0');
+  return prefix + String((count || 0) + 1).padStart(3, '0');
 }
 
 async function createParticipant(programId, code, nickname, email, role) {
@@ -1178,7 +1182,8 @@ function showMain() {
   main.style.display = 'flex';
 
   const roleLabels = { director: 'DIRECTOR', supporter: 'SUPPORTER', participant: 'PARTICIPANT' };
-  document.getElementById('role-label').textContent = roleLabels[currentRole];
+  const badge = roleLabels[currentRole] + (currentRole === 'participant' && currentParticipant?.code ? ' · ' + currentParticipant.code : '');
+  document.getElementById('role-label').textContent = badge;
 
   if (currentRole === 'director') {
     document.getElementById('director-view').style.display = 'block';
@@ -1253,6 +1258,7 @@ function renderParticipantForm() {
         このアプリは、あなたの成長と自己効力感を記録するためのものです。<br>
         何かアクションを起こした時、その時の気持ちをひとこと入力してください。
       </p>
+      ${currentParticipant?.code ? `<div style="margin-top:14px;padding-top:12px;border-top:0.5px solid var(--border-soft);font-size:12px;color:var(--text-sub);letter-spacing:0.03em;">あなたのコード：<span style="color:var(--text-main);font-weight:600;">${currentParticipant.code}</span>（次回ログインに使います。大切に保管してください）</div>` : ''}
     </div>
     <div class="stage-indicator">
       <div class="stage-num">${stageKanji[stage]}</div>
@@ -1568,6 +1574,12 @@ async function submitObservation() {
     return;
   }
 
+  // 「関わり後のステージ」が記録されたら参加者の現在ステージを更新
+  // （参加者画面の質問・以後の記録ログに実際の段階を反映させ、ステージが一のまま固定される問題を解消）
+  if (stageAfter) {
+    try { await db.from('participants').update({ current_stage: stageAfter }).eq('id', participant.id); } catch (e) {}
+  }
+
   msgEl.textContent = '✦ 記録を保存しました';
   msgEl.style.color = 'var(--gold)';
 
@@ -1604,7 +1616,7 @@ async function loadDirectorData() {
     db.from('participants').select('*', { count: 'exact', head: true }),
     db.from('events').select('*', { count: 'exact', head: true }),
     db.from('events').select('id, stage, recorded_at, participant_id').order('recorded_at', { ascending: false }).limit(10),
-    db.from('participants').select('code, nickname, current_stage, is_active, program_id').order('created_at', { ascending: false }),
+    db.from('participants').select('id, code, nickname, current_stage, is_active, program_id').order('created_at', { ascending: false }),
     db.from('observations').select('*').eq('alert_needed', true).order('observed_at', { ascending: false }),
     db.from('observations').select('*').eq('transform_flag', true).order('observed_at', { ascending: false }).limit(20),
   ]);
@@ -1613,12 +1625,21 @@ async function loadDirectorData() {
   document.getElementById('stat-participants').textContent = participantCount || 0;
   document.getElementById('stat-events').textContent = eventCount || 0;
 
+  // 参加者IDから人物（コード・ニックネーム）を引くマップ。ログをUUIDではなく人が読める形で表示するため
+  const pmap = {};
+  (participants || []).forEach(p => { pmap[p.id] = p; });
+  const who = (pid) => {
+    const p = pmap[pid];
+    if (!p) return (pid ? pid.slice(0,8) + '…' : '-');
+    return p.code + (p.nickname ? '（' + p.nickname + '）' : '');
+  };
+
   // 最近の記録
   const recentTbody = document.getElementById('recent-events');
   if (recentEvents?.length) {
     recentTbody.innerHTML = recentEvents.map(e => `
       <tr>
-        <td>${e.participant_id?.slice(0,8)}...</td>
+        <td>${who(e.participant_id)}</td>
         <td><span class="stage-pill stage-c${e.stage}">${stageKanji[e.stage]} ${stageNames[e.stage]}</span></td>
         <td>${new Date(e.recorded_at).toLocaleString('ja-JP', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
       </tr>
@@ -1648,7 +1669,7 @@ async function loadDirectorData() {
   if (alerts?.length) {
     alertTbody.innerHTML = alerts.map(a => `
       <tr>
-        <td><span class="alert-dot"></span>${a.participant_id?.slice(0,8)}...</td>
+        <td><span class="alert-dot"></span>${who(a.participant_id)}</td>
         <td>${a.alert_reason || '-'}</td>
         <td>${new Date(a.observed_at).toLocaleString('ja-JP', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
         <td>${a.supporter_id}</td>
@@ -1663,7 +1684,7 @@ async function loadDirectorData() {
   if (triggers?.length) {
     triggerTbody.innerHTML = triggers.map(t => `
       <tr>
-        <td>${t.participant_id?.slice(0,8)}...</td>
+        <td>${who(t.participant_id)}</td>
         <td style="max-width:200px;">${t.supporter_utterance?.slice(0,40) || '-'}${t.supporter_utterance?.length > 40 ? '...' : ''}</td>
         <td style="max-width:200px;">${t.participant_response?.slice(0,40) || '-'}${t.participant_response?.length > 40 ? '...' : ''}</td>
         <td>${t.emotion_tags?.join('・') || '-'}</td>
