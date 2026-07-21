@@ -937,7 +937,8 @@ body::before {
 
         <div class="form-group">
           <div class="form-label">参加者コード</div>
-          <input type="text" class="free-input" id="obs-participant-code" placeholder="例：P001" style="min-height:unset;height:44px;resize:none;" />
+          <input type="text" class="free-input" id="obs-participant-code" placeholder="例：U001" style="min-height:unset;height:44px;resize:none;" />
+          <div style="font-size:11px;color:var(--text-sub);letter-spacing:0.03em;">参加者のコード（参加者＝U、支援者＝S。例：U001）</div>
         </div>
 
         <div class="form-group">
@@ -1214,7 +1215,7 @@ function showMain() {
   document.getElementById('main-screen').style.display = 'flex';
 
   const roleLabels = { director: 'DIRECTOR', supporter: 'SUPPORTER', participant: 'PARTICIPANT' };
-  document.getElementById('role-label').textContent = roleLabels[myProfile.role] || '';
+  document.getElementById('role-label').textContent = (roleLabels[myProfile.role] || '') + (myProfile.role === 'participant' && myProfile.code ? ' · ' + myProfile.code : '');
 
   if (myProfile.role === 'director') {
     document.getElementById('director-view').style.display = 'block';
